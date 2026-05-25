@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const heroSlides = [
@@ -213,6 +213,596 @@ const colorMap = {
   'Grey Stripe': '#718096',
 };
 
+// Memoized CheckoutPage component to prevent re-renders causing input focus loss
+const CheckoutPageComponent = ({ 
+  cart, 
+  cartTotal, 
+  cartCount, 
+  checkoutStep, 
+  checkoutForm, 
+  styles, 
+  setCheckoutStep, 
+  setCheckoutForm, 
+  notify, 
+  placeOrder 
+}) => {
+  const delivery = cartTotal >= 3000 ? 0 : 150;
+  const total = cartTotal + delivery;
+  
+  if (cart.length === 0)
+    return (
+      <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+        <div style={{ fontSize: 64, marginBottom: 16 }}>🛒</div>
+        <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
+          Your cart is empty
+        </div>
+        <button style={styles.btn} onClick={() => setCheckoutStep(0)}>
+          Shop Now
+        </button>
+      </div>
+    );
+  
+  return (
+    <div style={{ maxWidth: 1000, margin: '0 auto', padding: typeof window !== 'undefined' && window.innerWidth < 768 ? '1rem' : '2rem' }}>
+      <h1 style={{ fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? 24 : 28, fontWeight: 900, marginBottom: 24 }}>
+        Checkout
+      </h1>
+      {/* Steps */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 0,
+          marginBottom: 32,
+          background: '#f7f5f0',
+          borderRadius: 12,
+          padding: 4,
+        }}
+      >
+        {[
+          ['1', 'Delivery'],
+          ['2', 'Review'],
+          ['3', 'Confirm'],
+        ].map(([n, label], i) => (
+          <div
+            key={n}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '10px',
+              borderRadius: 10,
+              background: checkoutStep === i + 1 ? '#1a1a1a' : 'transparent',
+              color: checkoutStep === i + 1 ? '#fff' : '#888',
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: checkoutStep > i + 1 ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+            }}
+            onClick={() => checkoutStep > i + 1 && setCheckoutStep(i + 1)}
+          >
+            {label}
+          </div>
+        ))}
+      </div>
+
+      {checkoutStep === 1 && (
+        <div
+          className="checkoutGrid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth > 768 ? '1fr 380px' : '1fr',
+            gap: '2rem',
+          }}
+        >
+          <div style={{ background: '#fff', borderRadius: 16, padding: typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 28 }}>
+            <h2 style={{ marginTop: 0, fontSize: 18, fontWeight: 800 }}>
+              Delivery Information
+            </h2>
+            <div style={{ display: 'grid', gap: 14 }}>
+              {[
+                ['name', 'Full Name', 'text'],
+                ['email', 'Email Address', 'email'],
+                ['phone', 'Phone Number', 'tel'],
+                ['address', 'Street Address', 'text'],
+                ['city', 'City', 'text'],
+                ['province', 'Province', 'text'],
+                ['zip', 'Postal Code', 'text'],
+              ].map(([key, placeholder, type]) => (
+                <input
+                  key={key}
+                  type={type}
+                  style={styles.input}
+                  placeholder={placeholder}
+                  value={checkoutForm[key]}
+                  onChange={(e) =>
+                    setCheckoutForm((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                />
+              ))}
+              <textarea
+                style={{ ...styles.input, height: 72, resize: 'vertical' }}
+                placeholder="Order notes (optional)"
+                value={checkoutForm.notes}
+                onChange={(e) =>
+                  setCheckoutForm((f) => ({ ...f, notes: e.target.value }))
+                }
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 20,
+                background: '#f7f5f0',
+                borderRadius: 12,
+                padding: 16,
+                display: 'flex',
+                gap: 12,
+                alignItems: 'flex-start',
+              }}
+            >
+              <span style={{ fontSize: 24 }}>💳</span>
+              <div>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                  Cash on Delivery
+                </div>
+                <div style={{ fontSize: 13, color: '#666' }}>
+                  Pay in cash when your order arrives at your doorstep. No
+                  online payment required.
+                </div>
+              </div>
+            </div>
+            <button
+              style={{
+                ...styles.btn,
+                width: '100%',
+                justifyContent: 'center',
+                marginTop: 20,
+                fontSize: 16,
+              }}
+              onClick={() => {
+                const required = [
+                  'name',
+                  'phone',
+                  'address',
+                  'city',
+                  'province',
+                ];
+                if (required.some((k) => !checkoutForm[k])) {
+                  notify('Please fill all required fields');
+                  return;
+                }
+                setCheckoutStep(2);
+              }}
+            >
+              Continue to Review →
+            </button>
+          </div>
+          {/* Order Summary */}
+          <div>
+            <div
+              style={{
+                background: '#fff',
+                borderRadius: 16,
+                padding: 24,
+                position: 'sticky',
+                top: 80,
+              }}
+            >
+              <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 800 }}>
+                Order Summary ({cartCount} items)
+              </h3>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  marginBottom: 16,
+                }}
+              >
+                {cart.map((item) => (
+                  <div
+                    key={item.key}
+                    style={{ display: 'flex', gap: 10, alignItems: 'center' }}
+                  >
+                    <div
+                      style={{
+                        background: '#f0ede8',
+                        borderRadius: 8,
+                        width: 44,
+                        height: 44,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 22,
+                        flexShrink: 0,
+                        position: 'relative',
+                      }}
+                    >
+                      {item.images[0]}
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: -6,
+                          right: -6,
+                          background: '#1a1a1a',
+                          color: '#fff',
+                          borderRadius: '50%',
+                          width: 18,
+                          height: 18,
+                          fontSize: 10,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {item.qty}
+                      </span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: 13,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#888' }}>
+                        {item.color} · {item.size}
+                      </div>
+                    </div>
+                    <div
+                      style={{ fontWeight: 700, fontSize: 13, flexShrink: 0 }}
+                    >
+                      Rs. {(item.price * item.qty).toLocaleString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ borderTop: '1px solid #eee', paddingTop: 12 }}>
+                {[
+                  ['Subtotal', `Rs. ${cartTotal.toLocaleString()}`],
+                  [
+                    'Delivery',
+                    delivery === 0 ? 'Free 🎉' : `Rs. ${delivery}`,
+                  ],
+                  ['Payment', 'Cash on Delivery'],
+                ].map(([k, v]) => (
+                  <div
+                    key={k}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: 13,
+                      color: '#666',
+                      marginBottom: 6,
+                    }}
+                  >
+                    <span>{k}</span>
+                    <span
+                      style={{
+                        color:
+                          k === 'Delivery' && delivery === 0
+                            ? '#27ae60'
+                            : '#333',
+                      }}
+                    >
+                      {v}
+                    </span>
+                  </div>
+                ))}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontWeight: 800,
+                    fontSize: 17,
+                    marginTop: 10,
+                    borderTop: '1px solid #eee',
+                    paddingTop: 10,
+                  }}
+                >
+                  <span>Total</span>
+                  <span>Rs. {total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkoutStep === 2 && (
+        <div
+          className="checkoutGrid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth > 768 ? '1fr 380px' : '1fr',
+            gap: '2rem',
+          }}
+        >
+          <div style={{ background: '#fff', borderRadius: 16, padding: typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 28 }}>
+            <h2 style={{ marginTop: 0 }}>Review Your Order</h2>
+            <div
+              style={{
+                marginBottom: 20,
+                background: '#f7f5f0',
+                borderRadius: 12,
+                padding: 16,
+              }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>
+                📍 Delivery Address
+              </div>
+              <div style={{ fontSize: 14, color: '#555', lineHeight: 1.7 }}>
+                {checkoutForm.name}
+                <br />
+                {checkoutForm.phone}
+                <br />
+                {checkoutForm.address}, {checkoutForm.city},{' '}
+                {checkoutForm.province} {checkoutForm.zip}
+              </div>
+              <button
+                style={{
+                  ...styles.btnSm,
+                  background: '#fff',
+                  color: '#1a1a1a',
+                  border: '1px solid #ddd',
+                  marginTop: 10,
+                  fontSize: 12,
+                }}
+                onClick={() => setCheckoutStep(1)}
+              >
+                Edit
+              </button>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+                marginBottom: 24,
+              }}
+            >
+              {cart.map((item) => (
+                <div
+                  key={item.key}
+                  style={{
+                    display: 'flex',
+                    gap: 14,
+                    background: '#f7f5f0',
+                    borderRadius: 12,
+                    padding: 14,
+                    alignItems: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      background: '#e8e4df',
+                      borderRadius: 10,
+                      width: 60,
+                      height: 60,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 30,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {item.images[0]}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700 }}>{item.name}</div>
+                    <div style={{ fontSize: 13, color: '#888' }}>
+                      {item.color} · Size {item.size} · Qty {item.qty}
+                    </div>
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>
+                    Rs. {(item.price * item.qty).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                background: '#fff8e1',
+                border: '1.5px solid #f39c12',
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 20,
+                display: 'flex',
+                gap: 12,
+              }}
+            >
+              <span style={{ fontSize: 24 }}>⚠️</span>
+              <div style={{ fontSize: 13 }}>
+                <strong>Cash on Delivery:</strong> Please have exact cash of{' '}
+                <strong>Rs. {total.toLocaleString()}</strong> ready at the
+                time of delivery.
+              </div>
+            </div>
+            <button
+              style={{
+                ...styles.btn,
+                width: '100%',
+                justifyContent: 'center',
+                fontSize: 16,
+                padding: 14,
+              }}
+              onClick={() => setCheckoutStep(3)}
+            >
+              Proceed to Confirm →
+            </button>
+          </div>
+          <div>
+            <div
+              style={{ background: '#fff', borderRadius: 16, padding: 24 }}
+            >
+              <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 800 }}>
+                Order Total
+              </h3>
+              {[
+                ['Subtotal', `Rs. ${cartTotal.toLocaleString()}`],
+                ['Delivery', delivery === 0 ? 'Free' : `Rs. ${delivery}`],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: 14,
+                    color: '#666',
+                    marginBottom: 8,
+                  }}
+                >
+                  <span>{k}</span>
+                  <span>{v}</span>
+                </div>
+              ))}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontWeight: 800,
+                  fontSize: 20,
+                  borderTop: '1px solid #eee',
+                  paddingTop: 12,
+                  marginTop: 6,
+                }}
+              >
+                <span>Total</span>
+                <span>Rs. {total.toLocaleString()}</span>
+              </div>
+              <div
+                style={{
+                  marginTop: 12,
+                  fontSize: 12,
+                  color: '#888',
+                  textAlign: 'center',
+                }}
+              >
+                💳 Cash on Delivery
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkoutStep === 3 && (
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+          <div
+            style={{
+              background: '#fff',
+              borderRadius: 20,
+              padding: 40,
+              textAlign: 'center',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+            }}
+          >
+            <div style={{ fontSize: 64, marginBottom: 16 }}>📋</div>
+            <h2 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 900 }}>
+              Confirm Your Order
+            </h2>
+            <p style={{ color: '#666', marginBottom: 24 }}>
+              By confirming, you agree to pay{' '}
+              <strong>Rs. {total.toLocaleString()}</strong> in cash on
+              delivery.
+            </p>
+            <div
+              style={{
+                background: '#f7f5f0',
+                borderRadius: 14,
+                padding: 20,
+                marginBottom: 24,
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: 12 }}>
+                Order Details
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: 14,
+                  marginBottom: 6,
+                }}
+              >
+                <span style={{ color: '#888' }}>Items</span>
+                <span>{cartCount} shirt(s)</span>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: 14,
+                  marginBottom: 6,
+                }}
+              >
+                <span style={{ color: '#888' }}>Delivery to</span>
+                <span>{checkoutForm.city}</span>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: 14,
+                  marginBottom: 6,
+                }}
+              >
+                <span style={{ color: '#888' }}>Payment</span>
+                <span>Cash on Delivery</span>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: 18,
+                  fontWeight: 800,
+                  borderTop: '1px solid #ddd',
+                  paddingTop: 12,
+                  marginTop: 6,
+                }}
+              >
+                <span>Amount Due</span>
+                <span>Rs. {total.toLocaleString()}</span>
+              </div>
+            </div>
+            <button
+              style={{
+                ...styles.btn,
+                width: '100%',
+                justifyContent: 'center',
+                fontSize: 17,
+                padding: 16,
+                background: '#27ae60',
+              }}
+              onClick={placeOrder}
+            >
+              ✅ Place Order
+            </button>
+            <button
+              style={{
+                ...styles.btnOutline,
+                width: '100%',
+                justifyContent: 'center',
+                marginTop: 12,
+                padding: 14,
+              }}
+              onClick={() => setCheckoutStep(2)}
+            >
+              ← Go Back
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MemoizedCheckoutPage = memo(CheckoutPageComponent);
+
 export default function App() {
   const [page, setPage] = useState('home');
   const [cart, setCart] = useState([]);
@@ -402,13 +992,13 @@ export default function App() {
       zIndex: 100,
       boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
     },
-    navLogo: {
-      fontSize: 22,
-      fontWeight: 800,
-      letterSpacing: '-0.5px',
-      cursor: 'pointer',
-      color: '#fff',
-    },
+    // navLogo: {
+    //   fontSize: 22,
+    //   fontWeight: 800,
+    //   letterSpacing: '-0.5px',
+    //   cursor: 'pointer',
+    //   color: '#fff',
+    // },
     navLinks: { display: 'flex', gap: '1.5rem', alignItems: 'center' },
     navLink: {
       color: '#ccc',
@@ -1451,7 +2041,7 @@ export default function App() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: typeof window !== 'undefined' && window.innerWidth > 768 ? '1fr 1fr' : '1fr',
             gap: '3rem',
           }}
         >
@@ -1469,47 +2059,55 @@ export default function App() {
                 marginBottom: 16,
               }}
             >
-              {(() => {
-                const firstImage = p.imageUrl || p.images?.[0];
-                const isImageUrl =
-                  typeof firstImage === 'string' &&
-                  firstImage.includes('/') &&
-                  !firstImage.startsWith('data:image');
-                return isImageUrl ? (
-                  <img
-                    src={firstImage}
-                    alt={p.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: 20,
-                    }}
-                  />
-                ) : (
-                  firstImage
-                );
-              })()}
+                  {(() => {
+                    const firstImage = p.imageUrl || p.images?.[0];
+                    const isImageUrl =
+                      typeof firstImage === 'string' &&
+                      firstImage.includes('/') &&
+                      !firstImage.startsWith('data:image');
+                    return isImageUrl ? (
+                      <img
+                        src={firstImage}
+                        alt={p.name}
+                        style={{
+                          width: '100%',
+                          height: typeof window !== 'undefined' && window.innerWidth < 768 ? 320 : 400,
+                          objectFit: 'cover',
+                          borderRadius: 20,
+                        }}
+                      />
+                    ) : (
+                      firstImage
+                    );
+                  })()}
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {p.images.map((img, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: '#f0ede8',
-                    borderRadius: 12,
-                    width: 80,
-                    height: 80,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 40,
-                    border: '2px solid #1a1a1a',
-                  }}
-                >
-                  {img}
-                </div>
-              ))}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {p.images.map((img, i) => {
+                const isImg = typeof img === 'string' && img.includes('/') && !img.startsWith('data:image');
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      background: '#f0ede8',
+                      borderRadius: 12,
+                      width: 80,
+                      height: 80,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 40,
+                      border: '2px solid #1a1a1a',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {isImg ? (
+                      <img src={img} alt={`${p.name}-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      img
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
           {/* Details */}
@@ -2035,7 +2633,7 @@ export default function App() {
       />
       <div
         style={{
-          width: Math.min(420, window.innerWidth),
+          width: Math.min(420, window.innerWidth * 0.9),
           background: '#fff',
           display: 'flex',
           flexDirection: 'column',
@@ -2088,106 +2686,123 @@ export default function App() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {cart.map((item) => (
-                <div
-                  key={item.key}
-                  style={{
-                    display: 'flex',
-                    gap: 14,
-                    alignItems: 'flex-start',
-                    background: '#f7f5f0',
-                    borderRadius: 14,
-                    padding: 14,
-                  }}
-                >
+              {cart.map((item) => {
+                const imageUrl = item.imageUrl || item.images?.[0];
+                const isImg = typeof imageUrl === 'string' && imageUrl.includes('/');
+                return (
                   <div
+                    key={item.key}
                     style={{
-                      background: '#e8e4df',
-                      borderRadius: 10,
-                      width: 64,
-                      height: 64,
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 32,
-                      flexShrink: 0,
+                      gap: 14,
+                      alignItems: 'flex-start',
+                      background: '#f7f5f0',
+                      borderRadius: 14,
+                      padding: 14,
                     }}
                   >
-                    {item.images[0]}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
-                      style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{ fontSize: 12, color: '#888', marginBottom: 6 }}
-                    >
-                      {item.color} · Size {item.size}
-                    </div>
-                    <div
-                      style={{ display: 'flex', alignItems: 'center', gap: 10 }}
-                    >
-                      <button
-                        style={{
-                          width: 28,
-                          height: 28,
-                          border: '1px solid #ddd',
-                          borderRadius: 6,
-                          background: '#fff',
-                          cursor: 'pointer',
-                          fontWeight: 700,
-                        }}
-                        onClick={() => updateQty(item.key, -1)}
-                      >
-                        −
-                      </button>
-                      <span
-                        style={{
-                          fontWeight: 700,
-                          minWidth: 20,
-                          textAlign: 'center',
-                        }}
-                      >
-                        {item.qty}
-                      </span>
-                      <button
-                        style={{
-                          width: 28,
-                          height: 28,
-                          border: '1px solid #ddd',
-                          borderRadius: 6,
-                          background: '#fff',
-                          cursor: 'pointer',
-                          fontWeight: 700,
-                        }}
-                        onClick={() => updateQty(item.key, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: 15 }}>
-                      Rs. {(item.price * item.qty).toLocaleString()}
-                    </div>
-                    <button
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: '#e74c3c',
-                        fontSize: 12,
-                        marginTop: 4,
+                        background: '#e8e4df',
+                        borderRadius: 10,
+                        width: 64,
+                        height: 64,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 32,
+                        flexShrink: 0,
+                        overflow: 'hidden',
                       }}
-                      onClick={() => removeFromCart(item.key)}
                     >
-                      Remove
-                    </button>
+                      {isImg ? (
+                        <img
+                          src={imageUrl}
+                          alt={item.name}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        imageUrl
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        style={{ fontSize: 12, color: '#888', marginBottom: 6 }}
+                      >
+                        {item.color} · Size {item.size}
+                      </div>
+                      <div
+                        style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+                      >
+                        <button
+                          style={{
+                            width: 28,
+                            height: 28,
+                            border: '1px solid #ddd',
+                            borderRadius: 6,
+                            background: '#fff',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                          onClick={() => updateQty(item.key, -1)}
+                        >
+                          −
+                        </button>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            minWidth: 20,
+                            textAlign: 'center',
+                          }}
+                        >
+                          {item.qty}
+                        </span>
+                        <button
+                          style={{
+                            width: 28,
+                            height: 28,
+                            border: '1px solid #ddd',
+                            borderRadius: 6,
+                            background: '#fff',
+                            cursor: 'pointer',
+                            fontWeight: 700,
+                          }}
+                          onClick={() => updateQty(item.key, 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontWeight: 800, fontSize: 15 }}>
+                        Rs. {(item.price * item.qty).toLocaleString()}
+                      </div>
+                      <button
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#e74c3c',
+                          fontSize: 12,
+                          marginTop: 4,
+                        }}
+                        onClick={() => removeFromCart(item.key)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -2272,580 +2887,6 @@ export default function App() {
       </div>
     </div>
   );
-
-  const CheckoutPage = () => {
-    const delivery = cartTotal >= 3000 ? 0 : 150;
-    const total = cartTotal + delivery;
-    if (cart.length === 0)
-      return (
-        <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <div style={{ fontSize: 64, marginBottom: 16 }}>🛒</div>
-          <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>
-            Your cart is empty
-          </div>
-          <button style={styles.btn} onClick={() => setPage('shop')}>
-            Shop Now
-          </button>
-        </div>
-      );
-    return (
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 24 }}>
-          Checkout
-        </h1>
-        {/* Steps */}
-        <div
-          style={{
-            display: 'flex',
-            gap: 0,
-            marginBottom: 32,
-            background: '#f7f5f0',
-            borderRadius: 12,
-            padding: 4,
-          }}
-        >
-          {[
-            ['1', 'Delivery'],
-            ['2', 'Review'],
-            ['3', 'Confirm'],
-          ].map(([n, label], i) => (
-            <div
-              key={n}
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                padding: '10px',
-                borderRadius: 10,
-                background: checkoutStep === i + 1 ? '#1a1a1a' : 'transparent',
-                color: checkoutStep === i + 1 ? '#fff' : '#888',
-                fontWeight: 700,
-                fontSize: 14,
-                cursor: checkoutStep > i + 1 ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-              }}
-              onClick={() => checkoutStep > i + 1 && setCheckoutStep(i + 1)}
-            >
-              {label}
-            </div>
-          ))}
-        </div>
-
-        {checkoutStep === 1 && (
-          <div
-            className="checkoutGrid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 380px',
-              gap: '2rem',
-            }}
-          >
-            <div style={{ background: '#fff', borderRadius: 16, padding: 28 }}>
-              <h2 style={{ marginTop: 0, fontSize: 18, fontWeight: 800 }}>
-                Delivery Information
-              </h2>
-              <div style={{ display: 'grid', gap: 14 }}>
-                {[
-                  ['name', 'Full Name', 'text'],
-                  ['email', 'Email Address', 'email'],
-                  ['phone', 'Phone Number', 'tel'],
-                  ['address', 'Street Address', 'text'],
-                  ['city', 'City', 'text'],
-                  ['province', 'Province', 'text'],
-                  ['zip', 'Postal Code', 'text'],
-                ].map(([key, placeholder, type]) => (
-                  <input
-                    key={key}
-                    type={type}
-                    style={styles.input}
-                    placeholder={placeholder}
-                    value={checkoutForm[key]}
-                    onChange={(e) =>
-                      setCheckoutForm((f) => ({ ...f, [key]: e.target.value }))
-                    }
-                  />
-                ))}
-                <textarea
-                  style={{ ...styles.input, height: 72, resize: 'vertical' }}
-                  placeholder="Order notes (optional)"
-                  value={checkoutForm.notes}
-                  onChange={(e) =>
-                    setCheckoutForm((f) => ({ ...f, notes: e.target.value }))
-                  }
-                />
-              </div>
-              <div
-                style={{
-                  marginTop: 20,
-                  background: '#f7f5f0',
-                  borderRadius: 12,
-                  padding: 16,
-                  display: 'flex',
-                  gap: 12,
-                  alignItems: 'flex-start',
-                }}
-              >
-                <span style={{ fontSize: 24 }}>💳</span>
-                <div>
-                  <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                    Cash on Delivery
-                  </div>
-                  <div style={{ fontSize: 13, color: '#666' }}>
-                    Pay in cash when your order arrives at your doorstep. No
-                    online payment required.
-                  </div>
-                </div>
-              </div>
-              <button
-                style={{
-                  ...styles.btn,
-                  width: '100%',
-                  justifyContent: 'center',
-                  marginTop: 20,
-                  fontSize: 16,
-                }}
-                onClick={() => {
-                  const required = [
-                    'name',
-                    'phone',
-                    'address',
-                    'city',
-                    'province',
-                  ];
-                  if (required.some((k) => !checkoutForm[k])) {
-                    notify('Please fill all required fields');
-                    return;
-                  }
-                  setCheckoutStep(2);
-                }}
-              >
-                Continue to Review →
-              </button>
-            </div>
-            {/* Order Summary */}
-            <div>
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 16,
-                  padding: 24,
-                  position: 'sticky',
-                  top: 80,
-                }}
-              >
-                <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 800 }}>
-                  Order Summary ({cartCount} items)
-                </h3>
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 12,
-                    marginBottom: 16,
-                  }}
-                >
-                  {cart.map((item) => (
-                    <div
-                      key={item.key}
-                      style={{ display: 'flex', gap: 10, alignItems: 'center' }}
-                    >
-                      <div
-                        style={{
-                          background: '#f0ede8',
-                          borderRadius: 8,
-                          width: 44,
-                          height: 44,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 22,
-                          flexShrink: 0,
-                          position: 'relative',
-                        }}
-                      >
-                        {item.images[0]}
-                        <span
-                          style={{
-                            position: 'absolute',
-                            top: -6,
-                            right: -6,
-                            background: '#1a1a1a',
-                            color: '#fff',
-                            borderRadius: '50%',
-                            width: 18,
-                            height: 18,
-                            fontSize: 10,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {item.qty}
-                        </span>
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontWeight: 600,
-                            fontSize: 13,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                          }}
-                        >
-                          {item.name}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#888' }}>
-                          {item.color} · {item.size}
-                        </div>
-                      </div>
-                      <div
-                        style={{ fontWeight: 700, fontSize: 13, flexShrink: 0 }}
-                      >
-                        Rs. {(item.price * item.qty).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ borderTop: '1px solid #eee', paddingTop: 12 }}>
-                  {[
-                    ['Subtotal', `Rs. ${cartTotal.toLocaleString()}`],
-                    [
-                      'Delivery',
-                      delivery === 0 ? 'Free 🎉' : `Rs. ${delivery}`,
-                    ],
-                    ['Payment', 'Cash on Delivery'],
-                  ].map(([k, v]) => (
-                    <div
-                      key={k}
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: 13,
-                        color: '#666',
-                        marginBottom: 6,
-                      }}
-                    >
-                      <span>{k}</span>
-                      <span
-                        style={{
-                          color:
-                            k === 'Delivery' && delivery === 0
-                              ? '#27ae60'
-                              : '#333',
-                        }}
-                      >
-                        {v}
-                      </span>
-                    </div>
-                  ))}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontWeight: 800,
-                      fontSize: 17,
-                      marginTop: 10,
-                      borderTop: '1px solid #eee',
-                      paddingTop: 10,
-                    }}
-                  >
-                    <span>Total</span>
-                    <span>Rs. {total.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {checkoutStep === 2 && (
-          <div
-            className="checkoutGrid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 380px',
-              gap: '2rem',
-            }}
-          >
-            <div style={{ background: '#fff', borderRadius: 16, padding: 28 }}>
-              <h2 style={{ marginTop: 0 }}>Review Your Order</h2>
-              <div
-                style={{
-                  marginBottom: 20,
-                  background: '#f7f5f0',
-                  borderRadius: 12,
-                  padding: 16,
-                }}
-              >
-                <div style={{ fontWeight: 700, marginBottom: 8 }}>
-                  📍 Delivery Address
-                </div>
-                <div style={{ fontSize: 14, color: '#555', lineHeight: 1.7 }}>
-                  {checkoutForm.name}
-                  <br />
-                  {checkoutForm.phone}
-                  <br />
-                  {checkoutForm.address}, {checkoutForm.city},{' '}
-                  {checkoutForm.province} {checkoutForm.zip}
-                </div>
-                <button
-                  style={{
-                    ...styles.btnSm,
-                    background: '#fff',
-                    color: '#1a1a1a',
-                    border: '1px solid #ddd',
-                    marginTop: 10,
-                    fontSize: 12,
-                  }}
-                  onClick={() => setCheckoutStep(1)}
-                >
-                  Edit
-                </button>
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 14,
-                  marginBottom: 24,
-                }}
-              >
-                {cart.map((item) => (
-                  <div
-                    key={item.key}
-                    style={{
-                      display: 'flex',
-                      gap: 14,
-                      background: '#f7f5f0',
-                      borderRadius: 12,
-                      padding: 14,
-                      alignItems: 'center',
-                    }}
-                  >
-                    <div
-                      style={{
-                        background: '#e8e4df',
-                        borderRadius: 10,
-                        width: 60,
-                        height: 60,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 30,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {item.images[0]}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700 }}>{item.name}</div>
-                      <div style={{ fontSize: 13, color: '#888' }}>
-                        {item.color} · Size {item.size} · Qty {item.qty}
-                      </div>
-                    </div>
-                    <div style={{ fontWeight: 800, fontSize: 15 }}>
-                      Rs. {(item.price * item.qty).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div
-                style={{
-                  background: '#fff8e1',
-                  border: '1.5px solid #f39c12',
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 20,
-                  display: 'flex',
-                  gap: 12,
-                }}
-              >
-                <span style={{ fontSize: 24 }}>⚠️</span>
-                <div style={{ fontSize: 13 }}>
-                  <strong>Cash on Delivery:</strong> Please have exact cash of{' '}
-                  <strong>Rs. {total.toLocaleString()}</strong> ready at the
-                  time of delivery.
-                </div>
-              </div>
-              <button
-                style={{
-                  ...styles.btn,
-                  width: '100%',
-                  justifyContent: 'center',
-                  fontSize: 16,
-                  padding: 14,
-                }}
-                onClick={() => setCheckoutStep(3)}
-              >
-                Proceed to Confirm →
-              </button>
-            </div>
-            <div>
-              <div
-                style={{ background: '#fff', borderRadius: 16, padding: 24 }}
-              >
-                <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 800 }}>
-                  Order Total
-                </h3>
-                {[
-                  ['Subtotal', `Rs. ${cartTotal.toLocaleString()}`],
-                  ['Delivery', delivery === 0 ? 'Free' : `Rs. ${delivery}`],
-                ].map(([k, v]) => (
-                  <div
-                    key={k}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      fontSize: 14,
-                      color: '#666',
-                      marginBottom: 8,
-                    }}
-                  >
-                    <span>{k}</span>
-                    <span>{v}</span>
-                  </div>
-                ))}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontWeight: 800,
-                    fontSize: 20,
-                    borderTop: '1px solid #eee',
-                    paddingTop: 12,
-                    marginTop: 6,
-                  }}
-                >
-                  <span>Total</span>
-                  <span>Rs. {total.toLocaleString()}</span>
-                </div>
-                <div
-                  style={{
-                    marginTop: 12,
-                    fontSize: 12,
-                    color: '#888',
-                    textAlign: 'center',
-                  }}
-                >
-                  💳 Cash on Delivery
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {checkoutStep === 3 && (
-          <div style={{ maxWidth: 600, margin: '0 auto' }}>
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: 20,
-                padding: 40,
-                textAlign: 'center',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-              }}
-            >
-              <div style={{ fontSize: 64, marginBottom: 16 }}>📋</div>
-              <h2 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 900 }}>
-                Confirm Your Order
-              </h2>
-              <p style={{ color: '#666', marginBottom: 24 }}>
-                By confirming, you agree to pay{' '}
-                <strong>Rs. {total.toLocaleString()}</strong> in cash on
-                delivery.
-              </p>
-              <div
-                style={{
-                  background: '#f7f5f0',
-                  borderRadius: 14,
-                  padding: 20,
-                  marginBottom: 24,
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{ fontWeight: 700, marginBottom: 12 }}>
-                  Order Details
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 14,
-                    marginBottom: 6,
-                  }}
-                >
-                  <span style={{ color: '#888' }}>Items</span>
-                  <span>{cartCount} shirt(s)</span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 14,
-                    marginBottom: 6,
-                  }}
-                >
-                  <span style={{ color: '#888' }}>Delivery to</span>
-                  <span>{checkoutForm.city}</span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 14,
-                    marginBottom: 6,
-                  }}
-                >
-                  <span style={{ color: '#888' }}>Payment</span>
-                  <span>Cash on Delivery</span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: 18,
-                    fontWeight: 800,
-                    borderTop: '1px solid #ddd',
-                    paddingTop: 12,
-                    marginTop: 6,
-                  }}
-                >
-                  <span>Amount Due</span>
-                  <span>Rs. {total.toLocaleString()}</span>
-                </div>
-              </div>
-              <button
-                style={{
-                  ...styles.btn,
-                  width: '100%',
-                  justifyContent: 'center',
-                  fontSize: 17,
-                  padding: 16,
-                  background: '#27ae60',
-                }}
-                onClick={placeOrder}
-              >
-                ✅ Place Order
-              </button>
-              <button
-                style={{
-                  ...styles.btnOutline,
-                  width: '100%',
-                  justifyContent: 'center',
-                  marginTop: 12,
-                  padding: 14,
-                }}
-                onClick={() => setCheckoutStep(2)}
-              >
-                ← Go Back
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   const OrderSuccess = () => (
     <div
@@ -3208,7 +3249,7 @@ export default function App() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: '1.5rem',
             marginBottom: 32,
           }}
@@ -3310,13 +3351,20 @@ export default function App() {
           <div>
             <div
               style={{
-                fontSize: 22,
-                fontWeight: 900,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
                 marginBottom: 12,
-                color: '#f39c12',
               }}
             >
-              اندازِ بیاں
+              <object
+                data="/Andaze%20byan.pdf"
+                type="application/pdf"
+                aria-label="اندازِ بیاں logo"
+                style={{ height: 40, width: 'auto', display: 'block', overflow: 'hidden', pointerEvents: 'none' }}
+              >
+                <img src="/logo.png" alt="اندازِ بیاں" style={{ height: 40, objectFit: 'contain' }} />
+              </object>
             </div>
             <p style={{ color: '#888', fontSize: 14, lineHeight: 1.7 }}>
               Pakistan's finest shirt collection. Premium quality, unbeatable
@@ -3407,7 +3455,7 @@ export default function App() {
     home: <HomePage />,
     shop: <ShopPage />,
     product: <ProductPage />,
-    checkout: <CheckoutPage />,
+    checkout: <MemoizedCheckoutPage cart={cart} cartTotal={cartTotal} cartCount={cartCount} checkoutStep={checkoutStep} checkoutForm={checkoutForm} styles={styles} setCheckoutStep={setCheckoutStep} setCheckoutForm={setCheckoutForm} notify={notify} placeOrder={placeOrder} />,
     'order-success': <OrderSuccess />,
     wishlist: <WishlistPage />,
     orders: <OrdersPage />,
@@ -3442,7 +3490,14 @@ export default function App() {
       {/* Nav */}
       <nav style={styles.nav}>
         <div style={styles.navLogo} onClick={() => setPage('home')}>
-          اندازِ بیاں 👔
+          <object
+            data="/logo.png"
+            aria-label="اندازِ بیاں logo"
+            style={{ height: 60, width: 'auto', display: 'block', overflow: 'hidden', pointerEvents: 'none' }}
+          >
+            {/* fallback to png if PDF can't render */}
+            <img src="/logo.png" alt="اندازِ بیاں" style={{ height: 60, objectFit: 'contain' }} />
+          </object>
         </div>
         <button
           className="mobileMenuBtn"
