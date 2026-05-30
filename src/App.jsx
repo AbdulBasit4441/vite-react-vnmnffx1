@@ -131,6 +131,7 @@ const PRODUCTS = [
     description:
       'Sophisticated mandarin collar shirt with a clean minimalist design. Ideal for formal events.',
     images: ['👔'],
+    imageUrl: "/img1.jpg",
   },
   {
     id: 7,
@@ -850,16 +851,29 @@ export default function App() {
 
   const sendOrderEmails = async (order) => {
     try {
-      await supabase.functions.invoke('send-order-email', {
+      const response = await fetch('/api/order-confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           order,
           buyerEmail: checkoutForm.email,
-          ownerEmail: 'basid1496@gmail.com',
+          buyerName: checkoutForm.name,
         }),
       });
-      console.log('Order email trigger sent');
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Email send failed');
+      }
+
+      console.log('Order emails sent successfully');
+      return true;
     } catch (error) {
       console.error('Email trigger failed', error);
+      notify('⚠ Unable to send confirmation email.');
+      return false;
     }
   };
 
@@ -924,8 +938,16 @@ export default function App() {
     });
 
   const placeOrder = async () => {
-    const orderId = `TK${Date.now()}`;
-    const orderDate = new Date().toLocaleDateString('en-PK');
+    // TODO: Tracking ID generation disabled for now — will implement in future
+    const orderId = null;
+    const now = new Date();
+    const orderDate = now.toLocaleDateString('en-PK');
+    const orderTime = now.toLocaleTimeString('en-PK', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const orderTimestamp = now.toISOString();
 
     // 1. Pehle Supabase Database mein save karein
     try {
@@ -940,6 +962,9 @@ export default function App() {
          order_items: cart, // 👈 Change JSON.stringify(cart) to just cart
          total_amount: cartTotal,
          status: 'Confirmed',
+         order_date: orderDate,
+         order_time: orderTime,
+         ordered_at: orderTimestamp,
         },
       ]);
 
@@ -3256,7 +3281,7 @@ export default function App() {
         >
           {[
             ['📞', 'Phone', '+92 300 1234567'],
-            ['✉️', 'Email', 'support@teeking.pk'],
+            ['✉️', 'Email', 'andazeyebayan@gmail.com'],
             ['📍', 'Address', 'Rawalpindi, Punjab, Pakistan'],
             ['🕐', 'Hours', 'Mon–Sat, 9am–8pm'],
           ].map(([icon, label, val]) => (
@@ -3359,11 +3384,10 @@ export default function App() {
             >
               <object
                 data="/Andaze%20byan.pdf"
-                type="application/pdf"
                 aria-label="اندازِ بیاں logo"
                 style={{ height: 40, width: 'auto', display: 'block', overflow: 'hidden', pointerEvents: 'none' }}
               >
-                <img src="/logo.png" alt="اندازِ بیاں" style={{ height: 40, objectFit: 'contain' }} />
+                <img src="/logo.png" alt="اندازِ بیاں" style={{ height: 60, objectFit: 'contain', marginBottom: 10 }} />
               </object>
             </div>
             <p style={{ color: '#888', fontSize: 14, lineHeight: 1.7 }}>
