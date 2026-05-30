@@ -3358,6 +3358,7 @@ export default function App() {
 
   const Footer = () => (
     <footer
+      className="animatedFooter"
       style={{
         background: '#1a1a1a',
         color: '#fff',
@@ -3405,6 +3406,7 @@ export default function App() {
             ].map(([label, pg]) => (
               <div
                 key={pg}
+                className="footerLink"
                 style={{
                   color: '#888',
                   fontSize: 14,
@@ -3512,7 +3514,7 @@ export default function App() {
         </div>
       )}
       {/* Nav */}
-      <nav style={styles.nav}>
+      <nav className="animatedNav" style={styles.nav}>
         <div style={styles.navLogo} onClick={() => setPage('home')}>
           <object
             data="/logo.png"
@@ -3540,6 +3542,7 @@ export default function App() {
           ].map(([label, pg]) => (
             <span
               key={pg}
+              className="animatedNavLink"
               style={{
                 ...styles.navLink,
                 color: page === pg ? '#f39c12' : '#ccc',
@@ -3786,7 +3789,7 @@ export default function App() {
           </div>
         </div>
       </div>
-      <main style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <main key={page} className="pageFade" style={{ minHeight: 'calc(100vh - 64px)' }}>
         {pages[page] || <HomePage />}
       </main>
       <Footer />
@@ -3825,6 +3828,38 @@ export default function App() {
         }
         .checkoutGrid { display: grid; grid-template-columns: 1fr 380px; gap: 2rem; }
         .stickySummary { position: sticky; top: 80px; }
+        .animatedNav { animation: fadeInDown 0.35s ease both; }
+        .animatedFooter { animation: fadeInUp 0.35s ease both; }
+        .pageFade { animation: fadeIn 0.35s ease both; }
+        .animatedNavLink {
+          transition: color 0.25s ease, transform 0.25s ease;
+          display: inline-block;
+        }
+        .animatedNavLink:hover {
+          color: #f39c12;
+          transform: translateY(-1px);
+        }
+        .footerLink {
+          display: block;
+          transition: color 0.25s ease, transform 0.25s ease;
+          width: fit-content;
+        }
+        .footerLink:hover {
+          color: #f39c12;
+          transform: translateY(-1px);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @media (max-width: 900px) {
           .desktopNavLinks { display: none !important; }
           .mobileMenuBtn { display: inline-flex !important; }
