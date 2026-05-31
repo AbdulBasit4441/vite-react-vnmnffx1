@@ -939,8 +939,8 @@ export default function App() {
 
   const placeOrder = async () => {
     // TODO: Tracking ID generation disabled for now — will implement in future
-    const orderId = null;
     const now = new Date();
+    const orderId = `ORD${now.getTime()}`;
     const orderDate = now.toLocaleDateString('en-PK');
     const orderTime = now.toLocaleTimeString('en-PK', {
       hour: '2-digit',
@@ -959,18 +959,17 @@ export default function App() {
          customer_email: checkoutForm.email,
          customer_city: checkoutForm.city,
          customer_address: checkoutForm.address,
-         order_items: cart, // 👈 Change JSON.stringify(cart) to just cart
+         order_items: cart,
          total_amount: cartTotal,
          status: 'Confirmed',
-         order_date: orderDate,
-         order_time: orderTime,
-         ordered_at: orderTimestamp,
+         created_at: orderTimestamp,
         },
       ]);
 
       if (error) {
         console.error('Supabase Error:', error);
-        return notify("❌ Database error: Order couldn't save!");
+        const message = error.message || error.details || JSON.stringify(error);
+        return notify(`❌ Database error: ${message}`);
       }
     } catch (err) {
       console.error(err);
@@ -994,7 +993,7 @@ export default function App() {
     setCart([]);
     setPage('order-success');
     setCheckoutStep(1);
-    notify('🎉 Order Saved to Supabase!');
+    notify('🎉 Order Confirmed');
   };
 
   const styles = {
