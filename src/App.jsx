@@ -17,7 +17,7 @@ const heroSlides = [
     text: 'Discover premium formal shirts crafted for comfort and confidence.',
   },
   {
-    image: "/img3.jpg",
+    image: "/img3.png",
     label: 'SUMMER STYLE',
     title: 'Cool & Comfortable',
     subtitle: 'Summer Essentials',
@@ -64,7 +64,7 @@ const PRODUCTS = [
     description:
       'Slim fit casual shirt with a modern cut. Made from breathable cotton-blend fabric for all-day comfort.',
     images: ['👕', '👔'],
-    imageUrl: "/img3.jpg",
+    imageUrl: "/img3.png",
   },
   {
     id: 3,
@@ -81,7 +81,7 @@ const PRODUCTS = [
     description:
       'Ultra-light linen shirt perfect for warm weather. Features a relaxed fit and natural breathability.',
     images: ['👕'],
-    imageUrl: "/img3.jpg",
+    imageUrl: "/img3.png",
   },
   {
     id: 4,
@@ -166,22 +166,6 @@ const PRODUCTS = [
       'Vibrant Hawaiian-print shirt for beach days and summer parties. Light, airy, and full of personality.',
     images: ['👕'],
     imageUrl: "/img-4.webp",
-  },
-  {
-    id: 9,
-    name: 'Executive Stripe',
-    price: 3299,
-    originalPrice: 4200,
-    category: 'Formal',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Blue Stripe', 'Black Stripe', 'Grey Stripe'],
-    rating: 4.9,
-    reviews: 93,
-    stock: 7,
-    badge: 'Luxury',
-    description:
-      'Premium striped dress shirt with fine stitching. Crafted for the modern executive.',
-    images: ['👔'],
   },
 ];
 
@@ -451,7 +435,7 @@ const CheckoutPageComponent = ({
                         {item.name}
                       </div>
                       <div style={{ fontSize: 12, color: '#888' }}>
-                        {item.color} · {item.size}
+                        {item.size}
                       </div>
                     </div>
                     <div
@@ -595,9 +579,9 @@ const CheckoutPageComponent = ({
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>{item.name}</div>
-                    <div style={{ fontSize: 13, color: '#888' }}>
-                      {item.color} · Size {item.size} · Qty {item.qty}
-                    </div>
+                      <div style={{ fontSize: 13, color: '#888' }}>
+                        Size {item.size} · Qty {item.qty}
+                      </div>
                   </div>
                   <div style={{ fontWeight: 800, fontSize: 15 }}>
                     Rs. {(item.price * item.qty).toLocaleString()}
@@ -814,7 +798,7 @@ export default function App() {
   const [sortBy, setSortBy] = useState('featured');
   const [priceRange, setPriceRange] = useState([0, 5000]);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedColor, setSelectedColor] = useState('');
+  
   const [selectedSize2, setSelectedSize2] = useState('');
   const [qty, setQty] = useState(1);
   const [cartOpen, setCartOpen] = useState(false);
@@ -877,15 +861,12 @@ export default function App() {
     }
   };
 
-  const addToCart = (product, color, size, quantity = 1) => {
-    const key = `${product.id}-${color}-${size}`;
+  const addToCart = (product, size, quantity = 1) => {
+    const key = `${product.id}-${size}`;
     setCart((prev) => {
       const existing = prev.find((i) => i.key === key);
-      if (existing)
-        return prev.map((i) =>
-          i.key === key ? { ...i, qty: i.qty + quantity } : i
-        );
-      return [...prev, { ...product, key, color, size, qty: quantity }];
+      if (existing) return prev.map((i) => (i.key === key ? { ...i, qty: i.qty + quantity } : i));
+      return [...prev, { ...product, key, size, qty: quantity }];
     });
     notify(`✓ ${product.name} added to cart!`);
     setCartOpen(true);
@@ -1223,7 +1204,6 @@ export default function App() {
             }}
             onClick={() => {
               setSelectedProduct(product);
-              setSelectedColor(product.colors[0]);
               setSelectedSize2('');
               setQty(1);
               setPage('product');
@@ -1305,7 +1285,6 @@ export default function App() {
           style={{ padding: '16px' }}
           onClick={() => {
             setSelectedProduct(product);
-            setSelectedColor(product.colors[0]);
             setSelectedSize2('');
             setQty(1);
             setPage('product');
@@ -1339,29 +1318,7 @@ export default function App() {
               ({product.reviews})
             </span>
           </div>
-          <div
-            style={{
-              display: 'flex',
-              gap: 6,
-              marginBottom: 12,
-              flexWrap: 'wrap',
-            }}
-          >
-            {product.colors.slice(0, 4).map((c) => (
-              <div
-                key={c}
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: '50%',
-                  background: colorMap[c] || '#e40000',
-                  border: '2px solid #fff',
-                  boxShadow: '0 0 0 1.5px #ddd',
-                }}
-                title={c}
-              />
-            ))}
-          </div>
+          
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 19, fontWeight: 800, color: '#1a1a1a' }}>
               Rs. {product.price.toLocaleString()}
@@ -1384,24 +1341,14 @@ export default function App() {
         <div style={{ padding: '0 16px 16px', display: 'flex', gap: 8 }}>
           <button
             style={{ ...styles.btnSm, flex: 1 }}
-            onClick={() =>
-              addToCart(
-                product,
-                product.colors[0],
-                product.sizes[1] || product.sizes[0]
-              )
-            }
+            onClick={() => addToCart(product, product.sizes[1] || product.sizes[0])}
           >
             Add to Cart
           </button>
           <button
             style={{ ...styles.btnSm, background: '#f7f5f0', color: '#1a1a1a' }}
             onClick={() => {
-              addToCart(
-                product,
-                product.colors[0],
-                product.sizes[1] || product.sizes[0]
-              );
+              addToCart(product, product.sizes[1] || product.sizes[0]);
               setPage('checkout');
               setCartOpen(false);
             }}
@@ -1431,7 +1378,7 @@ export default function App() {
           position: 'relative',
           overflow: 'hidden',
           color: '#fff',
-          height: 520,
+          height: 460,
         }}
       >
         <div
@@ -1495,9 +1442,9 @@ export default function App() {
           style={{
             position: 'relative',
             zIndex: 2,
-            padding: '5rem 2rem',
+            padding: '4rem 1.5rem',
             textAlign: 'center',
-            maxWidth: 700,
+            maxWidth: 640,
             margin: '0 auto',
             display: 'flex',
             flexDirection: 'column',
@@ -1511,10 +1458,10 @@ export default function App() {
               background: '#e74c3c',
               color: '#fff',
               borderRadius: 20,
-              padding: '4px 16px',
-              fontSize: 13,
+              padding: '4px 14px',
+              fontSize: 12,
               fontWeight: 700,
-              marginBottom: 20,
+              marginBottom: 16,
               letterSpacing: '0.5px',
             }}
           >
@@ -1522,11 +1469,11 @@ export default function App() {
           </div>
           <h1
             style={{
-              fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+              fontSize: 'clamp(2rem, 4vw, 3.2rem)',
               fontWeight: 900,
-              margin: '0 0 1rem',
-              letterSpacing: '-1.5px',
-              lineHeight: 1.1,
+              margin: '0 0 0.9rem',
+              letterSpacing: '-1px',
+              lineHeight: 1.05,
             }}
           >
             {heroSlides[slideIndex].title}
@@ -1537,11 +1484,10 @@ export default function App() {
           </h1>
           <p
             style={{
-              fontSize: 18,
+              fontSize: 16,
               color: '#aaa',
-              marginBottom: 32,
-              maxWidth: 500,
-              margin: '0 auto 32px',
+              maxWidth: 440,
+              margin: '0 auto 24px',
             }}
           >
             {heroSlides[slideIndex].text}
@@ -1558,8 +1504,8 @@ export default function App() {
               style={{
                 ...styles.btn,
                 background: '#f39c12',
-                fontSize: 16,
-                padding: '14px 36px',
+                fontSize: 14,
+                padding: '12px 30px',
               }}
               onClick={() => setPage('shop')}
             >
@@ -1570,8 +1516,8 @@ export default function App() {
                 ...styles.btnOutline,
                 color: '#fff',
                 borderColor: '#fff',
-                padding: '14px 28px',
-                fontSize: 16,
+                padding: '12px 26px',
+                fontSize: 14,
               }}
               onClick={() => setPage('shop')}
             >
@@ -1581,9 +1527,9 @@ export default function App() {
           <div
             style={{
               display: 'flex',
-              gap: '2rem',
+              gap: '1.5rem',
               justifyContent: 'center',
-              marginTop: 40,
+              marginTop: 32,
               flexWrap: 'wrap',
             }}
           >
@@ -1594,10 +1540,10 @@ export default function App() {
               ['Easy', 'Returns'],
             ].map(([val, label]) => (
               <div key={label} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 900, color: '#f39c12' }}>
+                <div style={{ fontSize: 20, fontWeight: 900, color: '#f39c12' }}>
                   {val}
                 </div>
-                <div style={{ fontSize: 13, color: '#8b8181' }}>{label}</div>
+                <div style={{ fontSize: 12, color: '#8b8181' }}>{label}</div>
               </div>
             ))}
           </div>
@@ -1735,7 +1681,7 @@ export default function App() {
           backgroundSize: 'cover',
           backgroundPosition: 'top',
           backgroundRepeat: 'no-repeat',
-          padding: '5rem 2rem',
+          padding: '7rem 2rem',
           textAlign: 'center',
         }}
       >
@@ -2108,6 +2054,8 @@ export default function App() {
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {p.images.map((img, i) => {
                 const isImg = typeof img === 'string' && img.includes('/') && !img.startsWith('data:image');
+                const src = isImg ? img : p.imageUrl || img;
+                const showImg = typeof src === 'string' && src.includes('/') && !src.startsWith('data:image');
                 return (
                   <div
                     key={i}
@@ -2124,10 +2072,10 @@ export default function App() {
                       overflow: 'hidden',
                     }}
                   >
-                    {isImg ? (
-                      <img src={img} alt={`${p.name}-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {showImg ? (
+                      <img src={src} alt={`${p.name}-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      img
+                      src
                     )}
                   </div>
                 );
@@ -2209,36 +2157,7 @@ export default function App() {
               You save Rs. {savings.toLocaleString()} (
               {Math.round((savings / p.originalPrice) * 100)}%)
             </div>
-            {/* Color */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>
-                Color: <span style={{ fontWeight: 400 }}>{selectedColor}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {p.colors.map((c) => (
-                  <button
-                    key={c}
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      background: colorMap[c] || '#ccc',
-                      border:
-                        selectedColor === c
-                          ? '3px solid #1a1a1a'
-                          : '2px solid #ddd',
-                      cursor: 'pointer',
-                      boxShadow:
-                        selectedColor === c
-                          ? '0 0 0 3px rgba(0,0,0,0.1)'
-                          : 'none',
-                    }}
-                    title={c}
-                    onClick={() => setSelectedColor(c)}
-                  />
-                ))}
-              </div>
-            </div>
+            
             {/* Size */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>
@@ -2326,7 +2245,7 @@ export default function App() {
                     notify('Please select a size!');
                     return;
                   }
-                  addToCart(p, selectedColor, selectedSize2, qty);
+                  addToCart(p, selectedSize2, qty);
                 }}
               >
                 🛒 Add to Cart
@@ -2343,7 +2262,7 @@ export default function App() {
                     notify('Please select a size!');
                     return;
                   }
-                  addToCart(p, selectedColor, selectedSize2, qty);
+                  addToCart(p, selectedSize2, qty);
                   setPage('checkout');
                 }}
               >
@@ -2428,7 +2347,7 @@ export default function App() {
               <p>{p.description}</p>
               <ul style={{ paddingLeft: 20, color: '#555' }}>
                 <li>Premium quality fabric — soft and durable</li>
-                <li>Available in multiple colors and sizes</li>
+                <li>Available in multiple sizes</li>
                 <li>Machine washable for easy care</li>
                 <li>Crafted with attention to detail</li>
               </ul>
@@ -2449,7 +2368,6 @@ export default function App() {
                 ['Fit', 'Regular Fit'],
                 ['Care', 'Machine Wash Cold'],
                 ['Available Sizes', p.sizes.join(', ')],
-                ['Colors', p.colors.join(', ')],
               ].map(([k, v]) => (
                 <React.Fragment key={k}>
                   <div
@@ -2762,7 +2680,7 @@ export default function App() {
                       <div
                         style={{ fontSize: 12, color: '#888', marginBottom: 6 }}
                       >
-                        {item.color} · Size {item.size}
+                        Size {item.size}
                       </div>
                       <div
                         style={{ display: 'flex', alignItems: 'center', gap: 10 }}
@@ -3147,7 +3065,7 @@ export default function App() {
                     <span style={{ marginRight: 6 }}>{item.images[0]}</span>
                     {item.name} × {item.qty}{' '}
                     <span style={{ color: '#888' }}>
-                      ({item.color}, {item.size})
+                      (Size {item.size})
                     </span>
                   </div>
                 ))}
@@ -3190,7 +3108,7 @@ export default function App() {
         }}
       >
         <h1 style={{ fontSize: 40, fontWeight: 900, margin: 0 }}>
-          About <span style={{ color: '#f39c12' }}>TeeKing</span>
+          About <span style={{ color: '#f39c12' }}>Andazey-e-Bayan</span>
         </h1>
         <p style={{ color: '#aaa', fontSize: 18, marginTop: 12 }}>
           Pakistan's premium shirt destination
@@ -3209,7 +3127,7 @@ export default function App() {
             Our Story
           </h2>
           <p style={{ lineHeight: 1.9, color: '#555', fontSize: 16 }}>
-            Founded in Rawalpindi, TeeKing was born from a passion for quality
+            Founded in Rawalpindi, Andazey-e-Bayan was born from a passion for quality
             shirts that don't compromise on style. We believe every man deserves
             a great shirt — whether it's for a boardroom meeting, a casual
             weekend, or a special occasion.
@@ -3469,7 +3387,7 @@ export default function App() {
             color: '#666',
           }}
         >
-          <div>© 2024 TeeKing. All rights reserved.</div>
+          <div>© 2024 Andazey-e-Bayan. All rights reserved.</div>
           <div>Made with ❤ in Pakistan 🇵🇰</div>
         </div>
       </div>
