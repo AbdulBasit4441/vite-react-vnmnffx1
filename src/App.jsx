@@ -101,22 +101,6 @@ const PRODUCTS = [
     imageUrl: "/img2.jpg",  
   },
   {
-    id: 5,
-    name: 'Premium Denim',
-    price: 2799,
-    originalPrice: 3500,
-    category: 'Casual',
-    sizes: ['S', 'M', 'L', 'XL'],
-    colors: ['Light Wash', 'Dark Wash', 'Indigo'],
-    rating: 4.8,
-    reviews: 178,
-    stock: 12,
-    badge: 'Premium',
-    description:
-      'Stylish denim shirt that pairs perfectly with both jeans and chinos. Durable yet comfortable fabric.',
-    images: ['👕', '👔'],
-  },
-  {
     id: 6,
     name: 'Mandarin Collar',
     price: 2099,
