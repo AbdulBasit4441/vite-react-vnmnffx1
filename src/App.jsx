@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const heroSlides = [
@@ -892,7 +892,15 @@ const CheckoutPageComponent = ({
 const MemoizedCheckoutPage = memo(CheckoutPageComponent);
 
 export default function App() {
-  const [page, setPage] = useState('home');
+  const getInitialPage = () => {
+    if (typeof window === 'undefined') return 'home';
+    const params = new URLSearchParams(window.location.search);
+    const pageParam = params.get('page');
+    return pageParam || 'home';
+  };
+
+  const [page, setPage] = useState(getInitialPage);
+  const isFirstHistorySync = useRef(true);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -1151,6 +1159,28 @@ export default function App() {
       document.body.style.overflow = '';
     };
   }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      const requestedPage = event.state?.page || getInitialPage();
+      setPage(requestedPage);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.history.replaceState({ page }, '', `${window.location.pathname}?page=${page}`);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isFirstHistorySync.current) {
+      isFirstHistorySync.current = false;
+      return;
+    }
+    window.history.pushState({ page }, '', `${window.location.pathname}?page=${page}`);
+  }, [page]);
 
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
   const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
