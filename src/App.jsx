@@ -7,14 +7,14 @@ const heroSlides = [
     label: 'FREE DELIVERY ON ORDERS OVER Rs. 3000',
     title: "Pakistan's Finest",
     subtitle: 'Shirt Collection',
-    text: 'Premium shirts for every occasion — formal, casual, and everything in between.',
+    text: 'Premium shirts for every occasion — casual, sporty, and everyday comfort.',
   },
   {
     image: "/img2.jpg",
     label: 'NEW ARRIVALS',
-    title: 'Elegant Formal',
-    subtitle: 'Shirts for Office',
-    text: 'Discover premium formal shirts crafted for comfort and confidence.',
+    title: 'Fresh Casuals',
+    subtitle: 'T-Shirts & Shirts',
+    text: 'Discover soft everyday shirts and t-shirts made for comfort. Hoodies arriving this winter.',
   },
   {
     image: "/img3.png",
@@ -34,7 +34,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const PRODUCTS = [
   {
     id: 1,
-    name: 'Classic Oxford',
+    name: 'Printed Black Hoodies',
     price: 2499,
     originalPrice: 3200,
     category: 'Formal',
@@ -45,13 +45,13 @@ const PRODUCTS = [
     stock: 15,
     badge: 'Bestseller',
     description:
-      'A timeless Oxford shirt crafted from 100% premium cotton. Perfect for office wear or smart casual occasions.',
+      'A timeless Oxford shirt crafted from 100% premium cotton. Ideal for smart casual outings and everyday style.',
     images: ['👕'],
     imageUrl: "/img-4.webp",
   },
   {
     id: 2,
-    name: 'Urban Slim Fit',
+    name: 'Printed Shirt',
     price: 1899,
     originalPrice: 2500,
     category: 'Casual',
@@ -113,13 +113,13 @@ const PRODUCTS = [
     stock: 18,
     badge: 'Trending',
     description:
-      'Sophisticated mandarin collar shirt with a clean minimalist design. Ideal for formal events.',
+      'Sophisticated mandarin collar shirt with a clean minimalist design. Ideal for relaxed evenings and casual outings.',
     images: ['👔'],
     imageUrl: "/img1.jpg",
   },
   {
     id: 7,
-    name: 'Polo Classic',
+    name: 'White Printed Shirt',
     price: 1499,
     originalPrice: 1900,
     category: 'Sports',
@@ -136,7 +136,7 @@ const PRODUCTS = [
   },
   {
     id: 8,
-    name: 'Hawaiian Vibes',
+    name: 'Black Printerd Hoodies',
     price: 1799,
     originalPrice: 2300,
     category: 'Summer',
@@ -155,6 +155,101 @@ const PRODUCTS = [
 
 const CATEGORIES = ['All', 'Formal', 'Casual', 'Summer', 'Sports'];
 const SIZES_FILTER = ['S', 'M', 'L', 'XL', 'XXL'];
+
+const StarRating = ({ rating, size = 14 }) => (
+  <span style={{ color: '#f39c12', fontSize: size }}>
+    {'★'.repeat(Math.floor(rating))}
+    {'☆'.repeat(5 - Math.floor(rating))}
+    <span style={{ color: '#888', marginLeft: 4 }}>{rating}</span>
+  </span>
+);
+
+const TestimonialCard = ({ testimonial }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      style={{
+        background: '#fff',
+        borderRadius: 20,
+        padding: '32px',
+        boxShadow: hovered
+          ? '0 16px 40px rgba(0,0,0,0.12)'
+          : '0 4px 16px rgba(0,0,0,0.06)',
+        transition: 'all 0.3s ease',
+        transform: hovered ? 'translateY(-12px)' : 'translateY(0)',
+        border: '1px solid rgba(0,0,0,0.05)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -40,
+          width: 120,
+          height: 120,
+          background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+          borderRadius: '50%',
+          opacity: hovered ? 0.08 : 0,
+          transition: 'all 0.4s ease',
+          pointerEvents: 'none',
+        }}
+      />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <StarRating rating={testimonial.rating} size={16} />
+          <span style={{ fontSize: 12, color: '#f39c12', fontWeight: 600 }}>
+            Verified Purchase
+          </span>
+        </div>
+        <p
+          style={{
+            margin: '16px 0 20px',
+            color: '#333',
+            lineHeight: 1.8,
+            fontSize: 15,
+            fontStyle: 'italic',
+            position: 'relative',
+            paddingLeft: 20,
+          }}
+        >
+          <span style={{ position: 'absolute', left: 0, color: '#f39c12', fontSize: 24 }}>
+            "
+          </span>
+          {testimonial.comment}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 24,
+              flexShrink: 0,
+            }}
+          >
+            {testimonial.emoji || '💬'}
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15, color: '#1a1a1a' }}>
+              {testimonial.name}
+            </div>
+            <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>
+              📍 {testimonial.city}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const colorMap = {
   White: '#f8f8f5',
@@ -366,47 +461,59 @@ const CheckoutPageComponent = ({
                   marginBottom: 16,
                 }}
               >
-                {cart.map((item) => (
-                  <div
-                    key={item.key}
-                    style={{ display: 'flex', gap: 10, alignItems: 'center' }}
-                  >
+                {cart.map((item) => {
+                  const imageUrl = item.imageUrl || item.images?.[0];
+                  const isImg = typeof imageUrl === 'string' && imageUrl.includes('/');
+                  return (
                     <div
-                      style={{
-                        background: '#f0ede8',
-                        borderRadius: 8,
-                        width: 44,
-                        height: 44,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 22,
-                        flexShrink: 0,
-                        position: 'relative',
-                      }}
+                      key={item.key}
+                      style={{ display: 'flex', gap: 10, alignItems: 'center' }}
                     >
-                      {item.images[0]}
-                      <span
+                      <div
                         style={{
-                          position: 'absolute',
-                          top: -6,
-                          right: -6,
-                          background: '#1a1a1a',
-                          color: '#fff',
-                          borderRadius: '50%',
-                          width: 18,
-                          height: 18,
-                          fontSize: 10,
+                          background: '#f0ede8',
+                          borderRadius: 8,
+                          width: 44,
+                          height: 44,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontWeight: 700,
+                          fontSize: 22,
+                          flexShrink: 0,
+                          position: 'relative',
+                          overflow: 'hidden',
                         }}
                       >
-                        {item.qty}
-                      </span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                        {isImg ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          imageUrl
+                        )}
+                        <span
+                          style={{
+                            position: 'absolute',
+                            top: -6,
+                            right: -6,
+                            background: '#1a1a1a',
+                            color: '#fff',
+                            borderRadius: '50%',
+                            width: 18,
+                            height: 18,
+                            fontSize: 10,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {item.qty}
+                        </span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                       <div
                         style={{
                           fontWeight: 600,
@@ -428,7 +535,7 @@ const CheckoutPageComponent = ({
                       Rs. {(item.price * item.qty).toLocaleString()}
                     </div>
                   </div>
-                ))}
+                )})}
               </div>
               <div style={{ borderTop: '1px solid #eee', paddingTop: 12 }}>
                 {[
@@ -534,34 +641,46 @@ const CheckoutPageComponent = ({
                 marginBottom: 24,
               }}
             >
-              {cart.map((item) => (
-                <div
-                  key={item.key}
-                  style={{
-                    display: 'flex',
-                    gap: 14,
-                    background: '#f7f5f0',
-                    borderRadius: 12,
-                    padding: 14,
-                    alignItems: 'center',
-                  }}
-                >
+              {cart.map((item) => {
+                const imageUrl = item.imageUrl || item.images?.[0];
+                const isImg = typeof imageUrl === 'string' && imageUrl.includes('/');
+                return (
                   <div
+                    key={item.key}
                     style={{
-                      background: '#e8e4df',
-                      borderRadius: 10,
-                      width: 60,
-                      height: 60,
                       display: 'flex',
+                      gap: 14,
+                      background: '#f7f5f0',
+                      borderRadius: 12,
+                      padding: 14,
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 30,
-                      flexShrink: 0,
                     }}
                   >
-                    {item.images[0]}
-                  </div>
-                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        background: '#e8e4df',
+                        borderRadius: 10,
+                        width: 60,
+                        height: 60,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 30,
+                        flexShrink: 0,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {isImg ? (
+                        <img
+                          src={imageUrl}
+                          alt={item.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        imageUrl
+                      )}
+                    </div>
+                    <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 700 }}>{item.name}</div>
                       <div style={{ fontSize: 13, color: '#888' }}>
                         Size {item.size} · Qty {item.qty}
@@ -571,7 +690,7 @@ const CheckoutPageComponent = ({
                     Rs. {(item.price * item.qty).toLocaleString()}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
             <div
               style={{
@@ -811,6 +930,32 @@ export default function App() {
     comment: '',
   });
   const [productReviews, setProductReviews] = useState({});
+  const [testimonialForm, setTestimonialForm] = useState({
+    name: '',
+    city: '',
+    rating: 5,
+    comment: '',
+  });
+  const [customerTestimonials, setCustomerTestimonials] = useState([
+    {
+      name: 'Ahmed K.',
+      city: 'Rawalpindi',
+      comment: 'Amazing quality! The collection is perfect for casual wear and comfortable all day.',
+      rating: 5,
+    },
+    {
+      name: 'Bilal M.',
+      city: 'Lahore',
+      comment: 'Great fit and fast delivery. I love how the shirts feel and the checkout experience was smooth.',
+      rating: 5,
+    },
+    {
+      name: 'Sara J.',
+      city: 'Karachi',
+      comment: 'Super comfy and stylish. I bookmarked this shop for all my next orders.',
+      rating: 4,
+    },
+  ]);
 
   const notify = (msg) => {
     setNotification(msg);
@@ -856,14 +1001,141 @@ export default function App() {
     setCartOpen(true);
   };
 
+  const CategoryCard = ({ cat, idx }) => {
+    const [hovered, setHovered] = useState(false);
+    return (
+      <div
+        style={{
+          borderRadius: 24,
+          cursor: 'pointer',
+          transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          color: '#fff',
+          boxShadow: hovered
+            ? '0 25px 50px rgba(0,0,0,0.25)'
+            : '0 8px 24px rgba(0,0,0,0.12)',
+          transform: hovered ? 'translateY(-16px)' : 'translateY(0)',
+          position: 'relative',
+          overflow: 'hidden',
+          animation: `slideInUp 0.6s ease-out ${idx * 0.15}s both`,
+          height: 380,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={() => {
+          setSelectedCategory(cat.name);
+          setPage('shop');
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url('${cat.image}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            transition: 'transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            transform: hovered ? 'scale(1.12) rotate(2deg)' : 'scale(1) rotate(0deg)',
+            filter: hovered ? 'brightness(0.8)' : 'brightness(1)',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.28)',
+            transition: 'background 0.4s ease',
+          }}
+        />
+        <div
+          style={{
+            position: 'relative',
+            zIndex: 2,
+            textAlign: 'center',
+            padding: '40px 24px',
+            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            transform: hovered ? 'scale(1.05)' : 'scale(1)',
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 900,
+              fontSize: 32,
+              marginBottom: 12,
+              letterSpacing: '-1px',
+              transition: 'all 0.4s ease',
+              transform: hovered ? 'translateY(-8px)' : 'translateY(0)',
+            }}
+          >
+            {cat.name}
+          </div>
+          <div
+            style={{
+              fontSize: 15,
+              opacity: hovered ? 1 : 0.95,
+              marginBottom: 16,
+              fontWeight: 500,
+              transition: 'all 0.4s ease',
+              transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+            }}
+          >
+            {cat.desc}
+          </div>
+          <div
+            style={{
+              fontSize: 14,
+              opacity: hovered ? 1 : 0.9,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.3s ease',
+              transform: hovered ? 'translateY(0)' : 'translateY(2px)',
+              fontWeight: 600,
+            }}
+          >
+            <span>{cat.count} styles</span>
+            <span
+              style={{
+                fontSize: 16,
+                transition: 'transform 0.3s ease',
+                transform: hovered ? 'translateX(4px)' : 'translateX(0)',
+              }}
+            >
+              →
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handleTestimonialSubmit = (e) => {
+    e.preventDefault();
+    const { name, city, rating, comment } = testimonialForm;
+    if (!name.trim() || !city.trim() || !comment.trim()) {
+      notify('Please complete your name, city and review.');
+      return;
+    }
+
+    setCustomerTestimonials((prev) => [
+      {
+        name: name.trim(),
+        city: city.trim(),
+        rating,
+        comment: comment.trim(),
+        emoji: '💬',
+      },
+      ...prev,
+    ]);
+    setTestimonialForm({ name: '', city: '', rating: 5, comment: '' });
+    notify('Thanks! Your review is now visible to everyone.');
+  };
+
   const removeFromCart = (key) =>
     setCart((prev) => prev.filter((i) => i.key !== key));
-  const updateQty = (key, delta) =>
-    setCart((prev) =>
-      prev.map((i) =>
-        i.key === key ? { ...i, qty: Math.max(1, i.qty + delta) } : i
-      )
-    );
   const toggleWishlist = (id) => {
     setWishlist((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -1153,17 +1425,10 @@ export default function App() {
     return map[b] || '#555';
   };
 
-  const StarRating = ({ rating, size = 14 }) => (
-    <span style={{ color: '#f39c12', fontSize: size }}>
-      {'★'.repeat(Math.floor(rating))}
-      {'☆'.repeat(5 - Math.floor(rating))}
-      <span style={{ color: '#888', marginLeft: 4 }}>{rating}</span>
-    </span>
-  );
-
   const ProductCard = ({ product }) => {
     const inWish = wishlist.includes(product.id);
     const [hovered, setHovered] = useState(false);
+    const defaultSize = product.sizes?.[0] || '';
     return (
       <div
         style={{
@@ -1302,7 +1567,32 @@ export default function App() {
               ({product.reviews})
             </span>
           </div>
-          
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+              alignItems: 'center',
+              marginBottom: 12,
+            }}
+          >
+            <span style={{ fontSize: 12, color: '#888' }}>Sizes:</span>
+            {product.sizes.map((s) => (
+              <span
+                key={s}
+                style={{
+                  fontSize: 12,
+                  color: '#444',
+                  background: '#f7f5f0',
+                  padding: '4px 8px',
+                  borderRadius: 999,
+                  border: '1px solid #e0e0e0',
+                }}
+              >
+                {s}
+              </span>
+            ))}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 19, fontWeight: 800, color: '#1a1a1a' }}>
               Rs. {product.price.toLocaleString()}
@@ -1325,14 +1615,14 @@ export default function App() {
         <div style={{ padding: '0 16px 16px', display: 'flex', gap: 8 }}>
           <button
             style={{ ...styles.btnSm, flex: 1 }}
-            onClick={() => addToCart(product, product.sizes[1] || product.sizes[0])}
+            onClick={() => addToCart(product, defaultSize)}
           >
             Add to Cart
           </button>
           <button
             style={{ ...styles.btnSm, background: '#f7f5f0', color: '#1a1a1a' }}
             onClick={() => {
-              addToCart(product, product.sizes[1] || product.sizes[0]);
+              addToCart(product, defaultSize);
               setPage('checkout');
               setCartOpen(false);
             }}
@@ -1566,62 +1856,53 @@ export default function App() {
       <Hero />
       {/* Featured Categories */}
       <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>Shop by Category</h2>
+        <div style={{ marginBottom: 24 }}>
+          <h2 style={{ ...styles.sectionTitle, marginBottom: 8 }}>Shop by Category</h2>
+          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>Explore our curated collections</p>
+        </div>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '1rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1.5rem',
             marginTop: 24,
           }}
         >
           {[
             {
               name: 'Formal',
-              icon: '👔',
-              desc: 'Office & Events',
-              color: '#1a2a5e',
+              desc: 'Smart Casual',
+              image: '/img1.jpg',
               count: 3,
             },
             {
               name: 'Casual',
-              icon: '👕',
               desc: 'Everyday Wear',
-              color: '#27ae60',
+              image: '/img2.jpg',
               count: 3,
             },
             {
               name: 'Summer',
-              icon: '🌞',
               desc: 'Light & Breezy',
-              color: '#f39c12',
+              image: '/img3.png',
               count: 2,
             },
-          ].map((cat) => (
-            <div
-              key={cat.name}
-              style={{
-                background: cat.color,
-                borderRadius: 16,
-                padding: '28px 20px',
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                color: '#fff',
-              }}
-              onClick={() => {
-                setSelectedCategory(cat.name);
-                setPage('shop');
-              }}
-            >
-              <div style={{ fontSize: 40, marginBottom: 10 }}>{cat.icon}</div>
-              <div style={{ fontWeight: 800, fontSize: 17 }}>{cat.name}</div>
-              <div style={{ fontSize: 13, opacity: 0.8 }}>{cat.desc}</div>
-              <div style={{ fontSize: 12, marginTop: 6, opacity: 0.7 }}>
-                {cat.count} styles
-              </div>
-            </div>
+          ].map((cat, idx) => (
+            <CategoryCard key={cat.name} cat={cat} idx={idx} />
           ))}
         </div>
+        <style>{`
+          @keyframes slideInUp {
+            from {
+              opacity: 0;
+              transform: translateY(40px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </div>
 
       {/* Bestsellers */}
@@ -1759,61 +2040,166 @@ export default function App() {
       </div>
 
       {/* Testimonials */}
-      <div style={styles.section}>
-        <h2
-          style={{
-            ...styles.sectionTitle,
-            textAlign: 'center',
-            marginBottom: 32,
-          }}
-        >
-          What Customers Say
-        </h2>
+      <div style={{ ...styles.section, background: '#f7f5f0', borderRadius: 24, padding: '4rem 2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <h2
+            style={{
+              ...styles.sectionTitle,
+              marginBottom: 12,
+            }}
+          >
+            What Customers Say
+          </h2>
+          <p style={{ color: '#888', fontSize: 15, maxWidth: 500, margin: '0 auto' }}>
+            Hear from our happy customers and share your own hoodie review with the community.
+          </p>
+        </div>
         <div
+          className="testimonialLayout"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '1.5rem',
+            gap: '2rem',
+            alignItems: 'start',
           }}
         >
-          {[
-            {
-              name: 'Ahmed K.',
-              city: 'Rawalpindi',
-              text: 'Amazing quality! The Oxford shirt is exactly what I needed for office. Fast delivery too.',
-              rating: 5,
-            },
-            {
-              name: 'Bilal M.',
-              city: 'Lahore',
-              text: 'Love the collection. Bought 3 shirts last month. Cash on delivery is super convenient.',
-              rating: 5,
-            },
-            {
-              name: 'Sara J.',
-              city: 'Karachi',
-              text: 'Gifted the polo shirt to my husband. He absolutely loves it. Will order again!',
-              rating: 4,
-            },
-          ].map((t) => (
-            <div
-              key={t.name}
-              style={{
-                background: '#fff',
-                borderRadius: 16,
-                padding: 24,
-                boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-              }}
-            >
-              <StarRating rating={t.rating} size={16} />
-              <p style={{ margin: '12px 0', color: '#444', lineHeight: 1.6 }}>
-                "{t.text}"
-              </p>
-              <div style={{ fontWeight: 700 }}>{t.name}</div>
-              <div style={{ fontSize: 13, color: '#888' }}>{t.city}</div>
+          <div
+            className="testimonialCardsGrid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '1.5rem',
+            }}
+          >
+            {customerTestimonials.map((t, idx) => (
+              <TestimonialCard key={`${t.name}-${idx}`} testimonial={t} idx={idx} />
+            ))}
+          </div>
+
+          <form
+            className="testimonialFormPanel"
+            onSubmit={handleTestimonialSubmit}
+            style={{
+              background: '#fff',
+              borderRadius: 24,
+              padding: '28px',
+              boxShadow: '0 18px 40px rgba(0,0,0,0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
+            <div style={{ fontSize: 20, fontWeight: 700 }}>Share Your Review</div>
+            <input
+              style={styles.input}
+              placeholder="Your name"
+              value={testimonialForm.name}
+              onChange={(e) => setTestimonialForm((prev) => ({ ...prev, name: e.target.value }))}
+            />
+            <input
+              style={styles.input}
+              placeholder="City"
+              value={testimonialForm.city}
+              onChange={(e) => setTestimonialForm((prev) => ({ ...prev, city: e.target.value }))}
+            />
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <label style={{ fontSize: 14, fontWeight: 600, color: '#444' }}>Rating</label>
+              <select
+                style={{ ...styles.select, maxWidth: 120 }}
+                value={testimonialForm.rating}
+                onChange={(e) => setTestimonialForm((prev) => ({ ...prev, rating: Number(e.target.value) }))}
+              >
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <option key={value} value={value}>
+                    {value} Star{value > 1 ? 's' : ''}
+                  </option>
+                ))}
+              </select>
             </div>
-          ))}
+
+            <textarea
+              style={{
+                width: '100%',
+                minHeight: 120,
+                padding: 14,
+                borderRadius: 12,
+                border: '1.5px solid #e0e0e0',
+                fontSize: 14,
+                resize: 'vertical',
+                fontFamily: 'inherit',
+              }}
+              placeholder="Write your review here"
+              value={testimonialForm.comment}
+              onChange={(e) => setTestimonialForm((prev) => ({ ...prev, comment: e.target.value }))}
+            />
+            <button type="submit" style={styles.btn}>
+              Submit Review
+            </button>
+          </form>
         </div>
+        <style>{`
+          .testimonialLayout {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 2rem;
+            align-items: start;
+          }
+
+          .testimonialCardsGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+          }
+
+          .testimonialFormPanel {
+            background: #fff;
+            border-radius: 24px;
+            padding: 28px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            touch-action: manipulation;
+          }
+
+          .testimonialFormPanel input,
+          .testimonialFormPanel select,
+          .testimonialFormPanel textarea {
+            width: 100%;
+            touch-action: manipulation;
+          }
+
+          @media (max-width: 980px) {
+            .testimonialLayout {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media (max-width: 640px) {
+            .testimonialLayout {
+              gap: 1rem;
+            }
+            .testimonialFormPanel {
+              padding: 20px;
+            }
+            .testimonialCardsGrid {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @keyframes slideInUp {
+            from {
+              opacity: 0;
+              transform: translateY(40px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </div>
     </div>
   );
@@ -2380,148 +2766,231 @@ export default function App() {
           )}
           {activeTab === 'reviews' && (
             <div>
-              <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center', minWidth: 120 }}>
-                  <div style={{ fontSize: 48, fontWeight: 900 }}>
-                    {p.rating}
-                  </div>
-                  <StarRating rating={p.rating} size={20} />
-                  <div style={{ color: '#888', fontSize: 13, marginTop: 4 }}>
-                    {p.reviews + pReviews.length} reviews
-                  </div>
-                </div>
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  {[5, 4, 3, 2, 1].map((star) => (
-                    <div
-                      key={star}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 10,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <span style={{ fontSize: 13, width: 20 }}>{star}★</span>
-                      <div
-                        style={{
-                          flex: 1,
-                          background: '#eee',
-                          borderRadius: 4,
-                          height: 8,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${star === 5 ? 65 : star === 4 ? 20 : 10}%`,
-                            background: '#f39c12',
-                            height: '100%',
-                            borderRadius: 4,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* User reviews */}
               <div
                 style={{
-                  marginTop: 24,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 16,
+                  display: 'grid',
+                  gridTemplateColumns: '1.1fr 0.9fr',
+                  gap: '2rem',
+                  alignItems: 'start',
                 }}
               >
-                {pReviews.map((r, i) => (
+                <div>
                   <div
-                    key={i}
                     style={{
-                      background: '#f7f5f0',
-                      borderRadius: 12,
-                      padding: 16,
+                      display: 'flex',
+                      gap: '1.5rem',
+                      flexWrap: 'wrap',
+                      marginBottom: 24,
                     }}
                   >
                     <div
                       style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        marginBottom: 6,
+                        background: '#fff',
+                        borderRadius: 18,
+                        padding: '24px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                        minWidth: 180,
+                        flex: '1 1 180px',
+                        textAlign: 'center',
                       }}
                     >
-                      <span style={{ fontWeight: 700 }}>{r.name}</span>
-                      <StarRating rating={r.rating} />
+                      <div style={{ fontSize: 42, fontWeight: 900, color: '#1a1a1a' }}>
+                        {p.rating}
+                      </div>
+                      <div style={{ margin: '10px 0' }}>
+                        <StarRating rating={p.rating} size={18} />
+                      </div>
+                      <div style={{ color: '#888', fontSize: 13 }}>
+                        {p.reviews + pReviews.length} reviews
+                      </div>
                     </div>
-                    <p style={{ margin: 0, color: '#555', fontSize: 14 }}>
-                      {r.comment}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              {/* Write review */}
-              <div
-                style={{
-                  marginTop: 24,
-                  background: '#f7f5f0',
-                  borderRadius: 16,
-                  padding: 20,
-                }}
-              >
-                <h3 style={{ marginTop: 0 }}>Write a Review</h3>
-                <input
-                  style={{ ...styles.input, marginBottom: 10 }}
-                  placeholder="Your name"
-                  value={reviewForm.name}
-                  onChange={(e) =>
-                    setReviewForm((f) => ({ ...f, name: e.target.value }))
-                  }
-                />
-                <div style={{ marginBottom: 10 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600 }}>
-                    Rating:{' '}
-                  </label>
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <button
-                      key={n}
+                    <div
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: 22,
-                        color: n <= reviewForm.rating ? '#f39c12' : '#ccc',
+                        background: '#fff',
+                        borderRadius: 18,
+                        padding: '24px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                        flex: '1 1 230px',
                       }}
-                      onClick={() =>
-                        setReviewForm((f) => ({ ...f, rating: n }))
-                      }
                     >
-                      ★
-                    </button>
-                  ))}
+                      <div style={{ fontSize: 14, color: '#888', marginBottom: 12 }}>
+                        Customer feedback distribution
+                      </div>
+                      {[5, 4, 3, 2, 1].map((star) => (
+                        <div
+                          key={star}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                            marginBottom: 10,
+                          }}
+                        >
+                          <span style={{ fontSize: 13, width: 24 }}>{star}★</span>
+                          <div
+                            style={{
+                              flex: 1,
+                              background: '#eee',
+                              borderRadius: 999,
+                              height: 8,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${star === 5 ? 62 : star === 4 ? 22 : 12}%`,
+                                background: '#f39c12',
+                                height: '100%',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 16 }}>
+                    {(pReviews.length ? [...pReviews].reverse() : []).map((r, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          background: '#fff',
+                          borderRadius: 18,
+                          padding: 24,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: '1rem',
+                            flexWrap: 'wrap',
+                            marginBottom: 12,
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontWeight: 700, color: '#1a1a1a' }}>
+                              {r.name}
+                            </div>
+                            <div style={{ fontSize: 13, color: '#888' }}>
+                              {new Date().toLocaleDateString()}
+                            </div>
+                          </div>
+                          <StarRating rating={r.rating} size={16} />
+                        </div>
+                        <p style={{ margin: 0, color: '#444', lineHeight: 1.75 }}>
+                          {r.comment}
+                        </p>
+                      </div>
+                    ))}
+                    {!pReviews.length && (
+                      <div
+                        style={{
+                          background: '#fff',
+                          borderRadius: 18,
+                          padding: 24,
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                          color: '#666',
+                        }}
+                      >
+                        No reviews yet. Be the first to share your experience!
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <textarea
-                  style={{ ...styles.input, height: 80, resize: 'vertical' }}
-                  placeholder="Share your experience..."
-                  value={reviewForm.comment}
-                  onChange={(e) =>
-                    setReviewForm((f) => ({ ...f, comment: e.target.value }))
-                  }
-                />
-                <button
-                  style={{ ...styles.btn, marginTop: 10 }}
-                  onClick={() => {
-                    if (!reviewForm.name || !reviewForm.comment) {
-                      notify('Please fill all fields');
-                      return;
-                    }
-                    setProductReviews((prev) => ({
-                      ...prev,
-                      [p.id]: [...(prev[p.id] || []), { ...reviewForm }],
-                    }));
-                    setReviewForm({ name: '', rating: 5, comment: '' });
-                    notify('✓ Review submitted!');
-                  }}
-                >
-                  Submit Review
-                </button>
+
+                <div>
+                  <div
+                    style={{
+                      background: '#fff',
+                      borderRadius: 24,
+                      padding: 28,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                      position: 'sticky',
+                      top: 24,
+                    }}
+                  >
+                    <h3 style={{ marginTop: 0, marginBottom: 8 }}>Write a Review</h3>
+                    <p style={{ margin: '0 0 20px', color: '#666', fontSize: 14 }}>
+                      Share your thoughts and help others discover the best styles.
+                    </p>
+                    <input
+                      style={{ ...styles.input, marginBottom: 14 }}
+                      placeholder="Your name"
+                      value={reviewForm.name}
+                      onChange={(e) =>
+                        setReviewForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                    />
+                    <div style={{ marginBottom: 16 }}>
+                      <div
+                        style={{
+                          marginBottom: 8,
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: '#333',
+                        }}
+                      >
+                        Your rating
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 10,
+                              border: '1px solid #e0e0e0',
+                              background: n <= reviewForm.rating ? '#f39c12' : '#fff',
+                              color: n <= reviewForm.rating ? '#fff' : '#ccc',
+                              cursor: 'pointer',
+                              fontSize: 16,
+                              transition: 'background 0.25s ease, color 0.25s ease',
+                            }}
+                            onClick={() =>
+                              setReviewForm((f) => ({ ...f, rating: n }))
+                            }
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <textarea
+                      style={{ ...styles.input, height: 110, resize: 'vertical', marginBottom: 14 }}
+                      placeholder="Share your experience..."
+                      value={reviewForm.comment}
+                      onChange={(e) =>
+                        setReviewForm((f) => ({ ...f, comment: e.target.value }))
+                      }
+                    />
+                    <button
+                      style={{
+                        ...styles.btn,
+                        width: '100%',
+                        justifyContent: 'center',
+                        padding: '14px 20px',
+                      }}
+                      onClick={() => {
+                        if (!reviewForm.name || !reviewForm.comment) {
+                          notify('Please fill all fields');
+                          return;
+                        }
+                        setProductReviews((prev) => ({
+                          ...prev,
+                          [p.id]: [...(prev[p.id] || []), { ...reviewForm }],
+                        }));
+                        setReviewForm({ name: '', rating: 5, comment: '' });
+                        notify('✓ Review submitted!');
+                      }}
+                    >
+                      Submit Review
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -3110,10 +3579,10 @@ export default function App() {
           <h2 style={{ fontWeight: 800, fontSize: 24, marginTop: 0 }}>
             Our Story
           </h2>
-          <p style={{ lineHeight: 1.9, color: '#555', fontSize: 16 }}>
+          <p style={{ lineHeight: 1.9, color: '#555', fontSize: 16, marginTop: '16px' }}>
             Founded in Rawalpindi, Andazey-e-Bayan was born from a passion for quality
             shirts that don't compromise on style. We believe every man deserves
-            a great shirt — whether it's for a boardroom meeting, a casual
+            a great shirt. Whether it's for a boardroom meeting, a casual
             weekend, or a special occasion.
           </p>
           <p style={{ lineHeight: 1.9, color: '#555', fontSize: 16 }}>
