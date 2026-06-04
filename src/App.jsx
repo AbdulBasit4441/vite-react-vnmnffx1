@@ -948,6 +948,7 @@ export default function App() {
   const cityRef = useRef(null);
   const ratingRef = useRef(null);
   const commentRef = useRef(null);
+  const SUPABASE_ORDER_CONFIRM_URL = import.meta.env.VITE_SUPABASE_ORDER_CONFIRM_URL || '';
   const [customerTestimonials, setCustomerTestimonials] = useState([
     {
       name: 'Ahmed K.',
@@ -975,8 +976,13 @@ export default function App() {
   };
 
   const sendOrderEmails = async (order) => {
+    if (!SUPABASE_ORDER_CONFIRM_URL) {
+      notify('Order confirmed, but email service is not configured for Supabase deploy.');
+      return true;
+    }
+
     try {
-      const response = await fetch('/api/order-confirm', {
+      const response = await fetch(SUPABASE_ORDER_CONFIRM_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1137,18 +1143,20 @@ export default function App() {
     }
 
     try {
-      const res = await fetch('/api/testimonials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, city, rating, comment }),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        notify(err.error || 'Unable to save review');
+      const { data, error } = await supabase
+        .from('testimonials')
+        .insert([{ name, city, rating, comment, emoji: '💬' }])
+        .select();
+
+      if (error) {
+        console.error('Supabase testimonials error', error);
+        notify(error.message || 'Unable to save review');
         return;
       }
-      const saved = await res.json();
-      setCustomerTestimonials((prev) => [saved, ...prev]);
+
+      if (data?.[0]) {
+        setCustomerTestimonials((prev) => [data[0], ...prev]);
+      }
 
       // Clear inputs
       if (nameRef.current) nameRef.current.value = '';
@@ -1198,14 +1206,23 @@ export default function App() {
     };
   }, []);
 
-  // load testimonials from local server if available
+  // load testimonials from Supabase directly
   useEffect(() => {
     const loadTestimonials = async () => {
       try {
-        const res = await fetch('/api/testimonials');
-        if (!res.ok) return;
-        const data = await res.json();
-        if (Array.isArray(data) && data.length) setCustomerTestimonials(data);
+        const { data, error } = await supabase
+          .from('testimonials')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Supabase testimonials load error', error);
+          return;
+        }
+
+        if (Array.isArray(data) && data.length) {
+          setCustomerTestimonials(data);
+        }
       } catch (err) {
         console.error('Could not load testimonials', err);
       }
