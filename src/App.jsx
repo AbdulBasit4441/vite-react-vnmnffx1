@@ -944,6 +944,10 @@ export default function App() {
     rating: 5,
     comment: '',
   });
+  const nameRef = useRef(null);
+  const cityRef = useRef(null);
+  const ratingRef = useRef(null);
+  const commentRef = useRef(null);
   const [customerTestimonials, setCustomerTestimonials] = useState([
     {
       name: 'Ahmed K.',
@@ -1120,27 +1124,47 @@ export default function App() {
     );
   };
 
-  const handleTestimonialSubmit = (e) => {
+  const handleTestimonialSubmit = async (e) => {
     e.preventDefault();
-    const { name, city, rating, comment } = testimonialForm;
-    if (!name.trim() || !city.trim() || !comment.trim()) {
+    const name = nameRef.current?.value?.trim() || '';
+    const city = cityRef.current?.value?.trim() || '';
+    const rating = Number(ratingRef.current?.value) || 5;
+    const comment = commentRef.current?.value?.trim() || '';
+
+    if (!name || !city || !comment) {
       notify('Please complete your name, city and review.');
       return;
     }
 
-    setCustomerTestimonials((prev) => [
-      {
-        name: name.trim(),
-        city: city.trim(),
-        rating,
-        comment: comment.trim(),
-        emoji: '💬',
-      },
-      ...prev,
-    ]);
-    setTestimonialForm({ name: '', city: '', rating: 5, comment: '' });
-    notify('Thanks! Your review is now visible to everyone.');
+    try {
+      const res = await fetch('/api/testimonials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, city, rating, comment }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        notify(err.error || 'Unable to save review');
+        return;
+      }
+      const saved = await res.json();
+      setCustomerTestimonials((prev) => [saved, ...prev]);
+
+      // Clear inputs
+      if (nameRef.current) nameRef.current.value = '';
+      if (cityRef.current) cityRef.current.value = '';
+      if (ratingRef.current) ratingRef.current.value = '5';
+      if (commentRef.current) commentRef.current.value = '';
+
+      setTestimonialForm({ name: '', city: '', rating: 5, comment: '' });
+      notify('Thanks! Your review is now visible to everyone.');
+    } catch (err) {
+      console.error('Submit testimonial failed', err);
+      notify('Error saving review');
+    }
   };
+
+  
 
   const removeFromCart = (key) =>
     setCart((prev) => prev.filter((i) => i.key !== key));
@@ -1172,6 +1196,21 @@ export default function App() {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
+  }, []);
+
+  // load testimonials from local server if available
+  useEffect(() => {
+    const loadTestimonials = async () => {
+      try {
+        const res = await fetch('/api/testimonials');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data) && data.length) setCustomerTestimonials(data);
+      } catch (err) {
+        console.error('Could not load testimonials', err);
+      }
+    };
+    loadTestimonials();
   }, []);
 
   useEffect(() => {
@@ -2120,23 +2159,23 @@ export default function App() {
           >
             <div style={{ fontSize: 20, fontWeight: 700 }}>Share Your Review</div>
             <input
+              ref={nameRef}
               style={styles.input}
               placeholder="Your name"
-              value={testimonialForm.name}
-              onChange={(e) => setTestimonialForm((prev) => ({ ...prev, name: e.target.value }))}
+              defaultValue={testimonialForm.name}
             />
             <input
+              ref={cityRef}
               style={styles.input}
               placeholder="City"
-              value={testimonialForm.city}
-              onChange={(e) => setTestimonialForm((prev) => ({ ...prev, city: e.target.value }))}
+              defaultValue={testimonialForm.city}
             />
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <label style={{ fontSize: 14, fontWeight: 600, color: '#444' }}>Rating</label>
               <select
+                ref={ratingRef}
                 style={{ ...styles.select, maxWidth: 120 }}
-                value={testimonialForm.rating}
-                onChange={(e) => setTestimonialForm((prev) => ({ ...prev, rating: Number(e.target.value) }))}
+                defaultValue={testimonialForm.rating}
               >
                 {[5, 4, 3, 2, 1].map((value) => (
                   <option key={value} value={value}>
@@ -2158,8 +2197,8 @@ export default function App() {
                 fontFamily: 'inherit',
               }}
               placeholder="Write your review here"
-              value={testimonialForm.comment}
-              onChange={(e) => setTestimonialForm((prev) => ({ ...prev, comment: e.target.value }))}
+              ref={commentRef}
+              defaultValue={testimonialForm.comment}
             />
             <button type="submit" style={styles.btn}>
               Submit Review

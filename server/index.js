@@ -11,6 +11,20 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+const fs = require('fs');
+const path = require('path');
+const DATA_DIR = path.join(__dirname, 'data');
+const TESTIMONIALS_FILE = path.join(DATA_DIR, 'testimonials.json');
+
+// ensure data dir exists
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+// ensure testimonials file exists
+if (!fs.existsSync(TESTIMONIALS_FILE)) {
+  fs.writeFileSync(TESTIMONIALS_FILE, JSON.stringify([]), 'utf8');
+}
+
 const {
   SMTP_HOST,
   SMTP_PORT,
@@ -86,6 +100,43 @@ app.post('/api/order-confirm', async (req, res) => {
   } catch (error) {
     console.error('Email send failed:', error);
     return res.status(500).json({ error: 'Unable to send emails.' });
+  }
+});
+
+// Simple testimonials API (JSON file storage)
+app.get('/api/testimonials', async (req, res) => {
+  try {
+    const raw = await fs.promises.readFile(TESTIMONIALS_FILE, 'utf8');
+    const data = JSON.parse(raw || '[]');
+    return res.json(data.reverse());
+  } catch (err) {
+    console.error('Failed to read testimonials', err);
+    return res.status(500).json({ error: 'Unable to read testimonials' });
+  }
+});
+
+app.post('/api/testimonials', async (req, res) => {
+  try {
+    const { name, city, rating, comment, emoji } = req.body;
+    if (!name || !city || !comment) return res.status(400).json({ error: 'Missing fields' });
+
+    const raw = await fs.promises.readFile(TESTIMONIALS_FILE, 'utf8');
+    const list = JSON.parse(raw || '[]');
+    const item = {
+      id: Date.now(),
+      name,
+      city,
+      rating: Number(rating) || 5,
+      comment,
+      emoji: emoji || '💬',
+      created_at: new Date().toISOString(),
+    };
+    list.push(item);
+    await fs.promises.writeFile(TESTIMONIALS_FILE, JSON.stringify(list, null, 2), 'utf8');
+    return res.status(201).json(item);
+  } catch (err) {
+    console.error('Failed to write testimonial', err);
+    return res.status(500).json({ error: 'Unable to save testimonial' });
   }
 });
 
