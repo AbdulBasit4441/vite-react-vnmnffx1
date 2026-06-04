@@ -948,7 +948,8 @@ export default function App() {
   const cityRef = useRef(null);
   const ratingRef = useRef(null);
   const commentRef = useRef(null);
-  const SUPABASE_ORDER_CONFIRM_URL = import.meta.env.VITE_SUPABASE_ORDER_CONFIRM_URL || '';
+  const ORDER_CONFIRM_URL =
+    import.meta.env.VITE_SUPABASE_ORDER_CONFIRM_URL || '/api/order-confirm';
   const [customerTestimonials, setCustomerTestimonials] = useState([
     {
       name: 'Ahmed K.',
@@ -976,13 +977,13 @@ export default function App() {
   };
 
   const sendOrderEmails = async (order) => {
-    if (!SUPABASE_ORDER_CONFIRM_URL) {
-      notify('Order confirmed, but email service is not configured for Supabase deploy.');
-      return true;
+    if (!ORDER_CONFIRM_URL) {
+      notify('Order confirmed, but email service is not configured.');
+      return false;
     }
 
     try {
-      const response = await fetch(SUPABASE_ORDER_CONFIRM_URL, {
+      const response = await fetch(ORDER_CONFIRM_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -994,7 +995,7 @@ export default function App() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(data.error || 'Email send failed');
       }
@@ -1003,7 +1004,7 @@ export default function App() {
       return true;
     } catch (error) {
       console.error('Email trigger failed', error);
-      notify('⚠ Unable to send confirmation email.');
+      notify(`⚠ Unable to send confirmation email: ${error.message}`);
       return false;
     }
   };
@@ -1310,7 +1311,11 @@ export default function App() {
       payment: 'Cash on Delivery',
     };
 
-    sendOrderEmails(order);
+    const emailResult = await sendOrderEmails(order);
+    if (!emailResult) {
+      notify('Order confirmed, but email could not be sent.');
+    }
+
     setOrders((prev) => [order, ...prev]);
     setOrderData(order);
     setCart([]);
