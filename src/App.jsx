@@ -1025,20 +1025,20 @@ export default function App() {
     return (
       <div
         style={{
-          borderRadius: 24,
+          borderRadius: 28,
           cursor: 'pointer',
-          transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          transition: 'all 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
           color: '#fff',
           boxShadow: hovered
-            ? '0 25px 50px rgba(0,0,0,0.25)'
-            : '0 8px 24px rgba(0,0,0,0.12)',
-          transform: hovered ? 'translateY(-16px)' : 'translateY(0)',
+            ? '0 30px 70px rgba(0,0,0,0.28)'
+            : '0 10px 30px rgba(0,0,0,0.14)',
+          transform: hovered ? 'translateY(-14px)' : 'translateY(0)',
           position: 'relative',
           overflow: 'hidden',
-          animation: `slideInUp 0.6s ease-out ${idx * 0.15}s both`,
-          height: 380,
+          animation: `slideInUp 0.65s ease-out ${idx * 0.12}s both`,
+          minHeight: 380,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-end',
           justifyContent: 'center',
         }}
         onMouseEnter={() => setHovered(true)}
@@ -1052,20 +1052,24 @@ export default function App() {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `url('${cat.image}')`,
+            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.55) 100%), url('${cat.image}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            transition: 'transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            transform: hovered ? 'scale(1.12) rotate(2deg)' : 'scale(1) rotate(0deg)',
-            filter: hovered ? 'brightness(0.8)' : 'brightness(1)',
+            transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+            transform: hovered ? 'scale(1.14) rotate(1.5deg)' : 'scale(1) rotate(0deg)',
+            filter: hovered ? 'brightness(0.88)' : 'brightness(1)',
           }}
         />
         <div
           style={{
             position: 'absolute',
-            inset: 0,
-            background: 'rgba(0, 0, 0, 0.28)',
-            transition: 'background 0.4s ease',
+            top: 20,
+            right: -30,
+            width: 110,
+            height: 110,
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.16)',
+            filter: 'blur(16px)',
           }}
         />
         <div
@@ -1073,19 +1077,41 @@ export default function App() {
             position: 'relative',
             zIndex: 2,
             textAlign: 'center',
-            padding: '40px 24px',
-            transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-            transform: hovered ? 'scale(1.05)' : 'scale(1)',
+            width: '100%',
+            padding: '36px 24px 40px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 16,
           }}
         >
           <div
             style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px 16px',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.16)',
+              border: '1px solid rgba(255,255,255,0.24)',
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#fff',
+            }}
+          >
+            {cat.desc}
+          </div>
+          <div
+            style={{
               fontWeight: 900,
               fontSize: 32,
-              marginBottom: 12,
+              marginBottom: 8,
               letterSpacing: '-1px',
-              transition: 'all 0.4s ease',
-              transform: hovered ? 'translateY(-8px)' : 'translateY(0)',
+              transition: 'all 0.35s ease',
+              transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
             }}
           >
             {cat.name}
@@ -1093,29 +1119,33 @@ export default function App() {
           <div
             style={{
               fontSize: 15,
-              opacity: hovered ? 1 : 0.95,
-              marginBottom: 16,
+              opacity: hovered ? 1 : 0.93,
+              lineHeight: 1.5,
+              maxWidth: 220,
               fontWeight: 500,
-              transition: 'all 0.4s ease',
-              transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+              transition: 'all 0.35s ease',
             }}
           >
-            {cat.desc}
+            Discover premium looks for every occasion.
           </div>
           <div
             style={{
-              fontSize: 14,
-              opacity: hovered ? 1 : 0.9,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
               gap: 8,
-              transition: 'all 0.3s ease',
-              transform: hovered ? 'translateY(0)' : 'translateY(2px)',
-              fontWeight: 600,
+              opacity: hovered ? 1 : 0.92,
+              transition: 'all 0.35s ease',
             }}
           >
-            <span>{cat.count} styles</span>
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                letterSpacing: '0.01em',
+              }}
+            >
+              {cat.count} styles
+            </span>
             <span
               style={{
                 fontSize: 16,
@@ -1125,6 +1155,25 @@ export default function App() {
             >
               →
             </span>
+          </div>
+          <div
+            style={{
+              marginTop: 12,
+              padding: '12px 22px',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.22)',
+              color: '#fff',
+              fontWeight: 700,
+              letterSpacing: '0.03em',
+              fontSize: 13,
+              textTransform: 'uppercase',
+              transition: 'all 0.35s ease',
+              transform: hovered ? 'translateY(0)' : 'translateY(4px)',
+              opacity: hovered ? 1 : 0.92,
+            }}
+          >
+            Explore Collection
           </div>
         </div>
       </div>
@@ -1273,22 +1322,33 @@ export default function App() {
     });
     const orderTimestamp = now.toISOString();
 
-    // 1. Pehle Supabase Database mein save karein
+    // 1. Prepare minimal order_items payload for DB, then save to Supabase
+    const orderNumericId = Date.now(); // numeric id to populate DB `id` column
+    const orderItemsPayload = cart.map((i) => ({
+      product_id: i.id ?? i.product_id ?? i.productId ?? null,
+      qty: Number(i.qty) || 1,
+      size: i.size ?? i.size_selected ?? null,
+    }));
+
     try {
       const { data, error } = await supabase.from('orders').insert([
-       {
-         customer_name: checkoutForm.name,
-         order_id: orderId,
-         customer_phone: checkoutForm.phone,
-         customer_email: checkoutForm.email,
-         customer_city: checkoutForm.city,
-         customer_address: checkoutForm.address,
-         order_items: cart,
-         total_amount: cartTotal,
-         status: 'Confirmed',
-         created_at: orderTimestamp,
+        {
+          id: orderNumericId,
+          customer_name: checkoutForm.name,
+          order_id: orderId,
+          customer_phone: checkoutForm.phone,
+          customer_email: checkoutForm.email,
+          customer_city: checkoutForm.city,
+          customer_address: checkoutForm.address,
+          order_items: orderItemsPayload,
+          total_amount: cartTotal,
+          status: 'Confirmed',
+          created_at: orderTimestamp,
         },
-      ]);
+      ]).select();
+
+      // log DB response for diagnostics (helps verify `id` saved)
+      console.log('Supabase insert response:', { data, error });
 
       if (error) {
         console.error('Supabase Error:', error);
@@ -1304,7 +1364,7 @@ export default function App() {
     const order = {
       id: orderId,
       date: orderDate,
-      items: [...cart],
+      items: [...cart], // full cart for emails/UI only
       total: cartTotal,
       address: checkoutForm,
       status: 'Confirmed',
@@ -1743,7 +1803,9 @@ export default function App() {
           position: 'relative',
           overflow: 'hidden',
           color: '#fff',
-          height: 460,
+          minHeight: 520,
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
         <div
@@ -1765,8 +1827,9 @@ export default function App() {
                 height: '100%',
                 objectFit: 'cover',
                 opacity: index === slideIndex ? 1 : 0,
-                transition: 'opacity 1s ease',
+                transition: 'opacity 1.2s ease-in-out',
                 display: 'block',
+                scale: index === slideIndex ? 1.02 : 1,
               }}
             />
           ))}
@@ -1776,29 +1839,29 @@ export default function App() {
             position: 'absolute',
             inset: 0,
             background:
-              'linear-gradient(180deg, rgba(26,26,26,0.28) 0%, rgba(26,26,26,0.88) 100%)',
+              'linear-gradient(135deg, rgba(26,26,26,0.35) 0%, rgba(26,26,26,0.75) 50%, rgba(26,26,26,0.85) 100%)',
           }}
         />
 
         <div
           style={{
             position: 'absolute',
-            top: -50,
-            right: -50,
-            width: 300,
-            height: 300,
-            background: 'rgba(230, 4, 4, 0.03)',
+            top: -100,
+            right: -100,
+            width: 350,
+            height: 350,
+            background: 'radial-gradient(circle, rgba(243,156,18,0.12) 0%, transparent 70%)',
             borderRadius: '50%',
           }}
         />
         <div
           style={{
             position: 'absolute',
-            bottom: -80,
-            left: -80,
-            width: 400,
-            height: 400,
-            background: 'rgba(233, 197, 197, 0.02)',
+            bottom: -120,
+            left: -100,
+            width: 450,
+            height: 450,
+            background: 'radial-gradient(circle, rgba(230,126,34,0.08) 0%, transparent 70%)',
             borderRadius: '50%',
           }}
         />
@@ -1807,52 +1870,68 @@ export default function App() {
           style={{
             position: 'relative',
             zIndex: 2,
-            padding: '4rem 1.5rem',
+            padding: typeof window !== 'undefined' && window.innerWidth < 768 ? '3rem 1rem' : '5rem 2rem',
             textAlign: 'center',
-            maxWidth: 640,
+            maxWidth: 800,
             margin: '0 auto',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            height: '100%',
+            alignItems: 'center',
+            width: '100%',
+            animation: 'fadeInUp 0.8s ease-out',
           }}
         >
           <div
             style={{
               display: 'inline-block',
-              background: '#e74c3c',
+              background: 'linear-gradient(135deg, #f39c12, #e67e22)',
               color: '#fff',
-              borderRadius: 20,
-              padding: '4px 14px',
-              fontSize: 12,
-              fontWeight: 700,
-              marginBottom: 16,
-              letterSpacing: '0.5px',
+              borderRadius: 30,
+              padding: '6px 18px',
+              fontSize: 11,
+              fontWeight: 800,
+              marginBottom: 24,
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              boxShadow: '0 8px 24px rgba(243, 156, 18, 0.3)',
+              backdropFilter: 'blur(10px)',
             }}
           >
             {heroSlides[slideIndex].label}
           </div>
           <h1
             style={{
-              fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-              fontWeight: 900,
-              margin: '0 0 0.9rem',
-              letterSpacing: '-1px',
-              lineHeight: 1.05,
+              fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? 'clamp(1.8rem, 5vw, 2.8rem)' : 'clamp(2.4rem, 5vw, 4rem)',
+              fontWeight: 950,
+              margin: '0 0 1.2rem',
+              letterSpacing: '-1.5px',
+              lineHeight: 1.1,
+              background: 'linear-gradient(to right, #fff 0%, #fff 100%)',
+              backgroundClip: 'text',
+              textShadow: '0 4px 20px rgba(0,0,0,0.5)',
             }}
           >
             {heroSlides[slideIndex].title}
             <br />
-            <span style={{ color: '#f39c12' }}>
+            <span style={{ 
+              background: 'linear-gradient(135deg, #f39c12, #f0ad4e)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              display: 'inline-block',
+            }}>
               {heroSlides[slideIndex].subtitle}
             </span>
           </h1>
           <p
             style={{
-              fontSize: 16,
-              color: '#aaa',
-              maxWidth: 440,
-              margin: '0 auto 24px',
+              fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? 15 : 17,
+              color: '#e8e8e8',
+              maxWidth: 500,
+              margin: '0 auto 32px',
+              lineHeight: 1.7,
+              fontWeight: 400,
             }}
           >
             {heroSlides[slideIndex].text}
@@ -1863,26 +1942,57 @@ export default function App() {
               gap: 16,
               justifyContent: 'center',
               flexWrap: 'wrap',
+              marginBottom: 40,
             }}
           >
             <button
               style={{
-                ...styles.btn,
-                background: '#f39c12',
-                fontSize: 14,
-                padding: '12px 30px',
+                background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                padding: typeof window !== 'undefined' && window.innerWidth < 768 ? '11px 28px' : '14px 36px',
+                fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? 13 : 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 8px 24px rgba(243, 156, 18, 0.4)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-4px)';
+                e.target.style.boxShadow = '0 12px 32px rgba(243, 156, 18, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 8px 24px rgba(243, 156, 18, 0.4)';
               }}
               onClick={() => setPage('shop')}
             >
-              Shop Now →
+              Shop Now <span>→</span>
             </button>
             <button
               style={{
-                ...styles.btnOutline,
+                background: 'rgba(255, 255, 255, 0.12)',
                 color: '#fff',
-                borderColor: '#fff',
-                padding: '12px 26px',
-                fontSize: 14,
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: 12,
+                padding: typeof window !== 'undefined' && window.innerWidth < 768 ? '11px 28px' : '14px 36px',
+                fontSize: typeof window !== 'undefined' && window.innerWidth < 768 ? 13 : 15,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(10px)',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.12)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
               }}
               onClick={() => setPage('shop')}
             >
@@ -1891,24 +2001,47 @@ export default function App() {
           </div>
           <div
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
               gap: '1.5rem',
               justifyContent: 'center',
-              marginTop: 32,
-              flexWrap: 'wrap',
+              maxWidth: 500,
             }}
           >
             {[
-              ['50+', 'Styles'],
-              ['10K+', 'Happy Customers'],
-              ['100%', 'Cotton'],
-              ['Easy', 'Returns'],
-            ].map(([val, label]) => (
-              <div key={label} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#f39c12' }}>
+              ['👕', '50+', 'Styles'],
+              ['💖', '10K+', 'Happy Customers'],
+              ['🌾', '100%', 'Cotton'],
+              ['↩️', 'Easy', 'Returns'],
+            ].map(([icon, val, label]) => (
+              <div 
+                key={label} 
+                style={{ 
+                  textAlign: 'center',
+                  padding: '16px 12px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: 12,
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'default',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(243, 156, 18, 0.2)';
+                  e.currentTarget.style.borderColor = 'rgba(243, 156, 18, 0.5)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{ fontSize: 24, marginBottom: 8 }}>{icon}</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: '#f39c12', marginBottom: 4 }}>
                   {val}
                 </div>
-                <div style={{ fontSize: 12, color: '#8b8181' }}>{label}</div>
+                <div style={{ fontSize: 12, color: '#bbb', fontWeight: 500 }}>{label}</div>
               </div>
             ))}
           </div>
@@ -1917,7 +2050,7 @@ export default function App() {
               display: 'flex',
               justifyContent: 'center',
               gap: 10,
-              marginTop: 24,
+              marginTop: 40,
             }}
           >
             {heroSlides.map((_, dotIndex) => (
@@ -1925,13 +2058,14 @@ export default function App() {
                 key={dotIndex}
                 onClick={() => setSlideIndex(dotIndex)}
                 style={{
-                  width: dotIndex === slideIndex ? 16 : 10,
+                  width: dotIndex === slideIndex ? 24 : 10,
                   height: 10,
                   borderRadius: 999,
                   border: 'none',
-                  background: dotIndex === slideIndex ? '#f39c12' : 'rgba(255,255,255,0.6)',
+                  background: dotIndex === slideIndex ? '#f39c12' : 'rgba(255,255,255,0.4)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.3s ease',
+                  boxShadow: dotIndex === slideIndex ? '0 4px 12px rgba(243, 156, 18, 0.5)' : 'none',
                 }}
                 aria-label={`Go to slide ${dotIndex + 1}`}
               />
@@ -1946,17 +2080,65 @@ export default function App() {
     <div>
       <Hero />
       {/* Featured Categories */}
-      <div style={styles.section}>
-        <div style={{ marginBottom: 24 }}>
-          <h2 style={{ ...styles.sectionTitle, marginBottom: 8 }}>Shop by Category</h2>
-          <p style={{ color: '#888', margin: 0, fontSize: 14 }}>Explore our curated collections</p>
+      <div
+        style={{
+          ...styles.section,
+          background: 'linear-gradient(180deg, #fff 0%, #f4efe8 100%)',
+          borderRadius: 32,
+          padding: '4rem 2rem',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1.5rem',
+            marginBottom: 32,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 14,
+                padding: '8px 16px',
+                borderRadius: 999,
+                background: '#f7f2e8',
+                color: '#b16d11',
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Featured
+            </div>
+            <h2 style={{ ...styles.sectionTitle, marginBottom: 12 }}>Shop by Category</h2>
+            <p style={{ color: '#6d6d6d', margin: 0, fontSize: 15, maxWidth: 510, lineHeight: 1.8 }}>
+              Find the right look quickly with curated categories, modern visuals, and bold hover interactions.
+            </p>
+          </div>
+          <button
+            style={{
+              ...styles.btnOutline,
+              borderColor: '#d4b278',
+              color: '#5a3b1f',
+              background: 'rgba(212,178,120,0.14)',
+            }}
+            onClick={() => setPage('shop')}
+          >
+            Browse All Categories
+          </button>
         </div>
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
             gap: '1.5rem',
-            marginTop: 24,
           }}
         >
           {[
